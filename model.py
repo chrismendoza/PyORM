@@ -20,7 +20,8 @@ def clones(func):
         new_instance = type(instance)(
             _parent=instance.objects.parent, session=instance.objects.session)
 
-        return func(new_instance, *args, **kwargs)
+        func(new_instance, *args, **kwargs)
+        return new_instance
 
 class Manager(object):
     """
@@ -70,7 +71,7 @@ class Manager(object):
         self.model = model
 
         self._primary_fields = []
-        self._generated_fields = []
+        self._compound_fields = {}
         self._filters = []
         self._grouping = []
         self._having = []
@@ -112,7 +113,16 @@ class Manager(object):
 
             NOTE: Each call to Model.fields() clones the original instance.
         """
-        pass
+        for column in columns:
+            self._primary_fields.append(column)
+            # TODO: add check to verify the field isn't already selected
+
+        for name, expression in compound_columns.items():
+            if name not in self._compound_fields:
+                self._compound_fields[name] = expression
+            else:
+                raise Exception('Column {0} already defined.'.format(name))
+            # TODO: add check to verify the name isn't already taken by a field.
 
     @clones
     def filter(self, *expressions, **django_expressions):
