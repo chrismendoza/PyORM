@@ -1,5 +1,26 @@
+import copy
+
+from functools import wraps
+
 from orm import session
 
+
+def clones(func):
+    """
+        Creates a clone of the model the method was passed before actually
+        trying to perform the operation, and performs the operation on the
+        cloned copy.
+
+        This is done to preserve the state of models while iterating, as well as
+        allowing the user to create a base model with some simple filters on it,
+        then later create branches of that model based on the original.
+    """
+    @wraps(func)
+    def wrapper(instance, *args, **kwargs):
+        new_instance = type(instance)(
+            _parent=instance.objects.parent, session=instance.objects.session)
+
+        return func(new_instance, *args, **kwargs)
 
 class Manager(object):
     """
@@ -56,6 +77,7 @@ class Manager(object):
         self._ordering = []
 
     # request
+    @clones
     def fields(self, *columns, **compound_columns):
         """
             PyORM supports two types of field assignments, columns, and compound
@@ -92,6 +114,7 @@ class Manager(object):
         """
         pass
 
+    @clones
     def filter(self, *expressions, **django_expressions):
         """
             PyORM filters are defined by passing expressions to the filter
@@ -111,12 +134,15 @@ class Manager(object):
         """
         pass
 
+    @clones
     def group(self, *groupings):
         pass
 
+    @clones
     def having(self, *having):
         pass
 
+    @clones
     def order(self, *ordering):
         pass
 
@@ -136,12 +162,15 @@ class Manager(object):
     def update(self, **columns):
         pass
 
+    @clones
     def delete(self, cascade=False):
         pass
 
+    @clones
     def get(self):
         pass
 
+    @clones
     def all(self):
         pass
 
@@ -409,4 +438,6 @@ class Model(object):
         try:
             return getattr(self.objects, attr)
         except AttributeError:
+            # since the error was actually caused when the user tried to call
+            # attr off of the model rather than off the Manager, raise that way.
             raise AttributeError(attr)
