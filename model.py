@@ -69,7 +69,8 @@ class Manager(object):
 
     def __init__(self, model):
         self.model = model
-
+        self._fields = []
+        self._relationships = []
         self._primary_fields = []
         self._compound_fields = {}
         self._filters = []
@@ -113,19 +114,32 @@ class Manager(object):
 
             NOTE: Each call to Model.fields() clones the original instance.
         """
+        chains = ['.'.join(column._queue) for column in self._primary_fields]
+
         for column in columns:
-            self._primary_fields.append(column)
-            # TODO: add check to verify the field isn't already selected
+            # Only add the column if they've not requested it yet.
+            if '.'.join(column._queue) not in chains:
+                self._primary_fields.append(column)
+                # TODO: add detection of which models need to be eager loaded
+                #       based on the path taken to get the columns.
 
         for name, expression in compound_columns.items():
-            if name not in self._compound_fields:
+            # Only add the name if it doesn't appear as an actual column name or
+            # relationship name on the base model we're currently working with.
+
+            # We don't care about the name appearing on related models, because
+            # they get prefixed with their parent model's names anyway.
+            if name not in (self._compound_fields.keys() +
+                    self._fields + self._relationships):
                 self._compound_fields[name] = expression
+
+                # TODO: add detection of which models need to be eager loaded
+                #       based on the path taken to get the columns.
             else:
                 raise Exception('Column {0} already defined.'.format(name))
-            # TODO: add check to verify the name isn't already taken by a field.
 
     @clones
-    def filter(self, *expressions, **django_expressions):
+    def filter(self, *expressions):
         """
             PyORM filters are defined by passing expressions to the filter
             method.  This allows the ORM to support complex queries when needed
