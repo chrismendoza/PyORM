@@ -2,7 +2,7 @@ import copy
 
 from functools import wraps
 
-from orm import session
+from pyorm import session
 
 
 def clones(func):
