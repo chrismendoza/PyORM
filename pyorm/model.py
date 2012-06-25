@@ -23,6 +23,7 @@ def clones(func):
         func(new_instance, *args, **kwargs)
         return new_instance
 
+
 class Manager(object):
     """
         Container responsible for managing the session for a model instance,
