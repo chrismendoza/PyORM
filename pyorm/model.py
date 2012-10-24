@@ -1,6 +1,4 @@
-import copy
-
-from functools import wraps
+import copy, functools
 
 from pyorm import session
 
@@ -15,7 +13,7 @@ def clones(func):
         allowing the user to create a base model with some simple filters on it,
         then later create branches of that model based on the original.
     """
-    @wraps(func)
+    @functools.wraps(func)
     def wrapper(instance, *args, **kwargs):
         new_instance = type(instance)(
             _parent=instance.objects.parent, session=instance.objects.session)
@@ -220,7 +218,7 @@ class Meta(type):
             later created in __call__, we don't have to determine which objects
             need to be attached to the model.
         """
-        new_class = type.__(cls, name, bases, attrs)
+        new_class = type.__new__(cls, name, bases, attrs)
         new_class._unbound = []
 
         # record the fields and relationships defined on the model
