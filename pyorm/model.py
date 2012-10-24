@@ -1,4 +1,4 @@
-import copy, functools
+import copy, functools, weakref
 
 from pyorm import session
 
@@ -67,7 +67,7 @@ class Manager(object):
         pass
 
     def __init__(self, model):
-        self.model = model
+        self.model = weakref.proxy(model)
         self._fields = []
         self._relationships = []
         self._primary_fields = []
@@ -298,7 +298,7 @@ class Meta(type):
             instance.Indexes = type('Indexes', (object,), {})()
             instance.Indexes._unbound = []
 
-        instance.Indexes.model = instance
+        instance.Indexes.model = weakref.proxy(instance)
 
         for name in instance.Indexes._unbound:
             if name[-1] == '_':
@@ -325,7 +325,7 @@ class Meta(type):
         else:
             instance.Meta = type('Meta', (object,), {})()
 
-        instance.Meta.model = instance
+        instance.Meta.model = weakref.proxy(instance)
 
         db_table = getattr(meta, 'db_table', cls.__name__.lower())
         if isinstance(db_table, basestring):
