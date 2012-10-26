@@ -175,6 +175,11 @@ class Expression(object):
                 if idx != max_idx:
                     self._tokens.append(Token(T_OPR, self.op))
 
+    def __copy__(self):
+        cpy = type(self)(op=self.op)
+        cpy._tokens = self._tokens[:]
+        return cpy
+
     def __and__(self, other):
         return calc_tokens(self, other, op=OP_AND)
 
@@ -289,7 +294,10 @@ class Equation(Expression):
 
             except AttributeError:
                 # We couldn't find the to_db method or the field at all. In these cases, just
-                # return the raw value.
+                # return the raw value. NOTE: I may want to re-think this and actually throw
+                # an error if the relationship or column referenced could not be found in the
+                # list of defined relationships (especially now that relationships can be added
+                # on an as needed basis).
                 pass
 
         return [literal]
