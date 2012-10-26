@@ -1,4 +1,4 @@
-import collections, weakref
+import collections, weakref, copy
 
 
 #Token types
@@ -176,9 +176,20 @@ class Expression(object):
                     self._tokens.append(Token(T_OPR, self.op))
 
     def __copy__(self):
-        cpy = type(self)(op=self.op)
-        cpy._tokens = self._tokens[:]
-        return cpy
+        instance = self.__class__(op=self.op)
+        instance._tokens = self._tokens[:]
+        return instance
+
+    def __deepcopy__(self, memo):
+        instance = self.__class__(op=self.op)
+        memo[id(self)] = instance
+        instance._tokens = copy.deepcopy(self._tokens)
+
+        # Alias should always be a string/unicode object, so we shouldn't need to deep copy it.
+        instance.alias = self.alias
+        instance._owner = self._owner
+
+        return instance
 
     def __and__(self, other):
         return calc_tokens(self, other, op=OP_AND)
@@ -363,6 +374,24 @@ class Column(object):
 
         self._alias = None
         self._scope = scope
+
+    def __copy__(self):
+        instance = self.__class__(self._path[:], scope=self.scope)
+        instance._owner = self._owner
+        instance._alias = self._alias
+
+        return instance
+
+    def __deepcopy__(self):
+        instance = self.__class__()
+        memo[id(self)] = instance
+
+        instance._path = copy.deepcopy(self._path)
+        instance._scope = self._scope
+        instance._alias = self._alias
+        instance._owner = self._owner
+
+        return instance
 
     def __getattr__(self, attr):
         """
