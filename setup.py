@@ -10,7 +10,7 @@ setup(
     version='0.0.1',
     author='Chris Mendoza',
     author_email='chris.mendoza@pyorm.com',
-    packages=['pyorm', 'pyorm.test'],
+    packages=['pyorm'],
     url='http://github.com/chrismendoza/PyORM/',
     license='LICENSE.txt',
     description='an ORM',
@@ -22,5 +22,5 @@ setup(
         'Operating System :: OS Independent',
         'Programming Language :: Python',
     ],
-    test_suite='runtests.collect'
+    test_suite='pyorm.test'
 )
