@@ -51,7 +51,7 @@ class Column(object):
     def owner(self):
         return getattr(self, '_owner', None)
 
-    @owner.getter
+    @owner.setter
     def owner(self, value):
         if value is not None:
             self._owner = weakref.proxy(value)
@@ -73,14 +73,8 @@ class Column(object):
         return instance
 
     def __deepcopy__(self):
-        instance = self.__class__()
+        instance = self.__copy__()
         memo[id(self)] = instance
-
-        instance._path = copy.deepcopy(self._path)
-        instance._scope = self._scope
-        instance._alias = self._alias
-        instance._owner = self._owner
-
         return instance
 
     def __getattr__(self, attr):
