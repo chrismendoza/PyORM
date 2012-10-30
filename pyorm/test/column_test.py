@@ -4,7 +4,8 @@ from pyorm.column import Column
 
 
 class MockOwner(object):
-    pass
+    def __hash__(self):
+        return 1
 
 
 class ColumnTestCase(unittest.TestCase):
@@ -54,6 +55,7 @@ class ColumnTestCase(unittest.TestCase):
 
         self.assertEqual(col._owner, weakref.proxy(mock_owner))
         self.assertEqual(col.owner, weakref.proxy(mock_owner))
+        self.assertEqual(id(col._owner_ref()), id(mock_owner))
 
     def test_copy(self):
         """
@@ -84,4 +86,29 @@ class ColumnTestCase(unittest.TestCase):
         col_copy = copy.copy(col)
 
         self.assertNotEqual(id(col), id(col_copy))
-        self.assertEqual(id(col._owner), id(col_copy._owner))        
+        self.assertEqual(id(col._owner), id(col_copy._owner))
+
+    def test_hash(self):
+        """
+            Checks to see if the has of two objects with the same options
+            hash to the same value, and that two column objects that do
+            not share all of the same objects hash to different values
+        """
+        mock_owner = MockOwner()
+        col = Column(scope='parent').test.field
+        col.set_alias('fish')
+        col.owner = mock_owner
+
+        mock_owner2 = MockOwner()
+        col2 = Column(scope='parent').test.field
+        col2.set_alias('fish')
+        col2.owner = mock_owner2
+
+        self.assertEqual(hash(col), hash(col2))
+
+        mock_owner3 = MockOwner()
+        col3 = Column(scope='parent').test.field
+        col3.set_alias('cheese')
+        col3.owner = mock_owner
+
+        self.assertNotEqual(hash(col), hash(col3))

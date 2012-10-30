@@ -35,7 +35,7 @@ class Column(object):
                     Column.field2, op=OP_EQ)
     """
 
-    __slots__ = ('_path', 'token_type', '_alias', '_owner', '_scope')
+    __slots__ = ('_path', 'token_type', '_alias', '_owner', '_owner_ref', '_scope')
 
     class __metaclass__(type):
         def __getattr__(cls, attr):
@@ -55,6 +55,7 @@ class Column(object):
     def owner(self, value):
         if value is not None:
             self._owner = weakref.proxy(value)
+            self._owner_ref = weakref.ref(value)
 
     def __init__(self, path=None, scope=False):
         if type(path) in (tuple, list):
@@ -175,7 +176,7 @@ class Column(object):
         return Expression(self, other, op=OP_GT)
 
     def __hash__(self):
-        return hash(tuple(self._path + [self._alias, self._scope, self.owner]))
+        return hash(tuple(self._path + [self._alias, self._scope, self._owner_ref()]))
 
     def set_alias(self, alias):
         self._alias = alias
