@@ -1,6 +1,8 @@
 import unittest, weakref, copy
 
 from pyorm.column import Column
+from pyorm.expression import Expression, Equation
+from pyorm.token import *
 
 
 class MockOwner(object):
@@ -112,3 +114,205 @@ class ColumnTestCase(unittest.TestCase):
         col3.owner = mock_owner
 
         self.assertNotEqual(hash(col), hash(col3))
+
+    def test_and(self):
+        exp = Column.test & 1
+        self.assertEqual(type(exp), Expression)
+        self.assertEqual(exp.op, OP_AND)
+        self.assertEqual(exp._tokens[0].type, T_COL)
+        self.assertEqual(exp._tokens[-1].type, T_LIT)
+
+    def test_rand(self):
+        exp = 1 & Column.test
+        self.assertEqual(type(exp), Expression)
+        self.assertEqual(exp.op, OP_AND)
+        self.assertEqual(exp._tokens[-1].type, T_COL)
+        self.assertEqual(exp._tokens[0].type, T_LIT)
+
+    def test_or(self):
+        exp = Column.test | 1
+        self.assertEqual(type(exp), Expression)
+        self.assertEqual(exp.op, OP_OR)
+        self.assertEqual(exp._tokens[0].type, T_COL)
+        self.assertEqual(exp._tokens[-1].type, T_LIT)
+
+    def test_ror(self):
+        exp = 1 | Column.test
+        self.assertEqual(type(exp), Expression)
+        self.assertEqual(exp.op, OP_OR)
+        self.assertEqual(exp._tokens[-1].type, T_COL)
+        self.assertEqual(exp._tokens[0].type, T_LIT)
+
+    def test_add(self):
+        exp = Column.test + 1
+        self.assertEqual(type(exp), Expression)
+        self.assertEqual(exp.op, OP_ADD)
+        self.assertEqual(exp._tokens[0].type, T_COL)
+        self.assertEqual(exp._tokens[-1].type, T_LIT)
+
+    def test_radd(self):
+        exp = 1 + Column.test
+        self.assertEqual(type(exp), Expression)
+        self.assertEqual(exp.op, OP_ADD)
+        self.assertEqual(exp._tokens[-1].type, T_COL)
+        self.assertEqual(exp._tokens[0].type, T_LIT)
+
+    def test_sub(self):
+        exp = Column.test - 1
+        self.assertEqual(type(exp), Expression)
+        self.assertEqual(exp.op, OP_SUB)
+        self.assertEqual(exp._tokens[0].type, T_COL)
+        self.assertEqual(exp._tokens[-1].type, T_LIT)
+
+    def test_rsub(self):
+        exp = 1 - Column.test
+        self.assertEqual(type(exp), Expression)
+        self.assertEqual(exp.op, OP_SUB)
+        self.assertEqual(exp._tokens[-1].type, T_COL)
+        self.assertEqual(exp._tokens[0].type, T_LIT)
+
+    def test_mul(self):
+        exp = Column.test * 1
+        self.assertEqual(type(exp), Expression)
+        self.assertEqual(exp.op, OP_MUL)
+        self.assertEqual(exp._tokens[0].type, T_COL)
+        self.assertEqual(exp._tokens[-1].type, T_LIT)
+
+    def test_rmul(self):
+        exp = 1 * Column.test
+        self.assertEqual(type(exp), Expression)
+        self.assertEqual(exp.op, OP_MUL)
+        self.assertEqual(exp._tokens[-1].type, T_COL)
+        self.assertEqual(exp._tokens[0].type, T_LIT)
+
+    def test_div(self):
+        exp = Column.test / 1
+        self.assertEqual(type(exp), Expression)
+        self.assertEqual(exp.op, OP_DIV)
+        self.assertEqual(exp._tokens[0].type, T_COL)
+        self.assertEqual(exp._tokens[-1].type, T_LIT)
+
+    def test_rdiv(self):
+        exp = 1 / Column.test
+        self.assertEqual(type(exp), Expression)
+        self.assertEqual(exp.op, OP_DIV)
+        self.assertEqual(exp._tokens[-1].type, T_COL)
+        self.assertEqual(exp._tokens[0].type, T_LIT)
+
+    def test_mod(self):
+        exp = Column.test % 1
+        self.assertEqual(type(exp), Expression)
+        self.assertEqual(exp.op, OP_MOD)
+        self.assertEqual(exp._tokens[0].type, T_COL)
+        self.assertEqual(exp._tokens[-1].type, T_LIT)
+
+    def test_rmod(self):
+        exp = 1 % Column.test
+        self.assertEqual(type(exp), Expression)
+        self.assertEqual(exp.op, OP_MOD)
+        self.assertEqual(exp._tokens[-1].type, T_COL)
+        self.assertEqual(exp._tokens[0].type, T_LIT)
+
+    def test_pow(self):
+        exp = Column.test ** 1
+        self.assertEqual(type(exp), Expression)
+        self.assertEqual(exp.op, OP_POW)
+        self.assertEqual(exp._tokens[0].type, T_COL)
+        self.assertEqual(exp._tokens[-1].type, T_LIT)
+
+    def test_rpow(self):
+        exp = 1 ** Column.test
+        self.assertEqual(type(exp), Expression)
+        self.assertEqual(exp.op, OP_POW)
+        self.assertEqual(exp._tokens[-1].type, T_COL)
+        self.assertEqual(exp._tokens[0].type, T_LIT)
+
+    def test_ne(self):
+        exp = Column.test != 1
+        self.assertEqual(type(exp), Equation)
+        self.assertEqual(exp.op, OP_NE)
+        self.assertEqual(exp._tokens[0].type, T_COL)
+        self.assertEqual(exp._tokens[-1].type, T_LIT)
+
+        exp = Column.test != None
+        self.assertEqual(type(exp), Equation)
+        self.assertEqual(exp.op, OP_NULLNE)
+        self.assertEqual(exp._tokens[0].type, T_COL)
+        self.assertEqual(exp._tokens[-1].type, T_LIT)
+
+        exp = Column.test != Column.fish
+        self.assertEqual(type(exp), Expression)
+        self.assertEqual(exp.op, OP_NE)
+        self.assertEqual(exp._tokens[0].type, T_COL)
+        self.assertEqual(exp._tokens[-1].type, T_COL)
+
+    def test_ne(self):
+        exp = Column.test == 1
+        self.assertEqual(type(exp), Equation)
+        self.assertEqual(exp.op, OP_EQ)
+        self.assertEqual(exp._tokens[0].type, T_COL)
+        self.assertEqual(exp._tokens[-1].type, T_LIT)
+
+        exp = Column.test == None
+        self.assertEqual(type(exp), Equation)
+        self.assertEqual(exp.op, OP_NULLEQ)
+        self.assertEqual(exp._tokens[0].type, T_COL)
+        self.assertEqual(exp._tokens[-1].type, T_LIT)
+
+        exp = Column.test == Column.fish
+        self.assertEqual(type(exp), Expression)
+        self.assertEqual(exp.op, OP_EQ)
+        self.assertEqual(exp._tokens[0].type, T_COL)
+        self.assertEqual(exp._tokens[-1].type, T_COL)
+
+    def test_lt(self):
+        exp = Column.test < 1
+        self.assertEqual(type(exp), Equation)
+        self.assertEqual(exp.op, OP_LT)
+        self.assertEqual(exp._tokens[0].type, T_COL)
+        self.assertEqual(exp._tokens[-1].type, T_LIT)
+
+        exp = Column.test < Column.fish
+        self.assertEqual(type(exp), Expression)
+        self.assertEqual(exp.op, OP_LT)
+        self.assertEqual(exp._tokens[0].type, T_COL)
+        self.assertEqual(exp._tokens[-1].type, T_COL)
+
+    def test_le(self):
+        exp = Column.test <= 1
+        self.assertEqual(type(exp), Equation)
+        self.assertEqual(exp.op, OP_LE)
+        self.assertEqual(exp._tokens[0].type, T_COL)
+        self.assertEqual(exp._tokens[-1].type, T_LIT)
+
+        exp = Column.test <= Column.fish
+        self.assertEqual(type(exp), Expression)
+        self.assertEqual(exp.op, OP_LE)
+        self.assertEqual(exp._tokens[0].type, T_COL)
+        self.assertEqual(exp._tokens[-1].type, T_COL)
+
+    def test_ge(self):
+        exp = Column.test >= 1
+        self.assertEqual(type(exp), Equation)
+        self.assertEqual(exp.op, OP_GE)
+        self.assertEqual(exp._tokens[0].type, T_COL)
+        self.assertEqual(exp._tokens[-1].type, T_LIT)
+
+        exp = Column.test >= Column.fish
+        self.assertEqual(type(exp), Expression)
+        self.assertEqual(exp.op, OP_GE)
+        self.assertEqual(exp._tokens[0].type, T_COL)
+        self.assertEqual(exp._tokens[-1].type, T_COL)
+
+    def test_gt(self):
+        exp = Column.test > 1
+        self.assertEqual(type(exp), Equation)
+        self.assertEqual(exp.op, OP_GT)
+        self.assertEqual(exp._tokens[0].type, T_COL)
+        self.assertEqual(exp._tokens[-1].type, T_LIT)
+
+        exp = Column.test > Column.fish
+        self.assertEqual(type(exp), Expression)
+        self.assertEqual(exp.op, OP_GT)
+        self.assertEqual(exp._tokens[0].type, T_COL)
+        self.assertEqual(exp._tokens[-1].type, T_COL)

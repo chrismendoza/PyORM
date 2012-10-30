@@ -137,7 +137,7 @@ class Column(object):
 
     def __ne__(self, other):
         if other is None:
-            return Expression(self, other, op=OP_NULLNE)
+            return Equation(self, other, op=OP_NULLNE)
         elif getattr(other, 'token_type', None) is None:
             return Equation(self, other, op=OP_NE)
 
