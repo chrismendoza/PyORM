@@ -175,7 +175,7 @@ class Column(object):
         return Expression(self, other, op=OP_GT)
 
     def __hash__(self):
-        return hash(tuple(self._path + [self._alias, self._scope]))
+        return hash(tuple(self._path + [self._alias, self._scope, self.owner]))
 
     def set_alias(self, alias):
         self._alias = alias
