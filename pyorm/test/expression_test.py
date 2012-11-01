@@ -4,7 +4,7 @@ from pyorm.expression import Expression, Equation, calc_tokens
 from pyorm.token import *
 
 
-class ColumnTestCase(unittest.TestCase):
+class CalcTokensTestCase(unittest.TestCase):
     def test_calc_tokens_new_expr(self):
         expr1 = Expression(1, OP_ADD)
         expr2 = 1
