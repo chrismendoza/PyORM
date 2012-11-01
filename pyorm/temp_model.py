@@ -1,4 +1,7 @@
-import copy, functools, weakref
+import copy
+import functools
+import weakref
+
 
 def clones(func):
     """
@@ -34,7 +37,6 @@ class MetaMeta(type):
             raise AttributeError(attr)
 
         return getattr(cls, attr)
-
 
     def __call__(cls, *args, **kwargs):
         instance = cls.__new__(cls)
@@ -105,7 +107,7 @@ class MetaIndexes(type):
                 trans_name = name
 
             setattr(instance, name,
-                getattr(instance, name).bind(name=trans_name, owner=kwargs.get('_owner', None)))
+                    getattr(instance, name).bind(name=trans_name, owner=kwargs.get('_owner', None)))
 
         instance.__init__(*args, **kwargs)
         return instance
@@ -147,7 +149,6 @@ class MetaModel(type):
 
         if not hasattr(meta, '__metaclass__'):
             meta.__metaclass = MetaMeta
-
 
     def __call__(cls, *args, **kwargs):
         """
@@ -199,7 +200,7 @@ class MetaModel(type):
             # Place the bound version on the instance as a replacement for the
             # unbound version that exists on the class.
             setattr(instance, name,
-                getattr(cls, name).bind(name=trans_name, owner=instance))
+                    getattr(cls, name).bind(name=trans_name, owner=instance))
 
         # Instantiate the indexes class so that any methods defined on it
         # will work properly (including properties)
@@ -215,10 +216,10 @@ class MetaModel(type):
         # session data.  If the session doesn't include a default, blow up.
         for server_type in ('read_server', 'write_server'):
             server = getattr(meta, server_type,
-                getattr(instance.objects.session, 'default_{0}'.format(server)))
+                             getattr(instance.objects.session, 'default_{0}'.format(server)))
 
             if isinstance(server, basestring):
-                servers = [copy.copy(server),]
+                servers = [copy.copy(server), ]
                 setattr(instance.Meta, server_type, servers)
             elif isinstance(server, (list, tuple)):
                 servers = copy.deepcopy(server)

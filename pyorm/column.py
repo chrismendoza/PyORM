@@ -1,4 +1,5 @@
-import weakref, copy
+import weakref
+import copy
 
 from pyorm.token import *
 from pyorm.expression import Expression, Equation
@@ -35,7 +36,8 @@ class Column(object):
                     Column.field2, op=OP_EQ)
     """
 
-    __slots__ = ('_path', 'token_type', '_alias', '_owner', '_owner_ref', '_scope')
+    __slots__ = (
+        '_path', 'token_type', '_alias', '_owner', '_owner_ref', '_scope')
 
     class __metaclass__(type):
         def __getattr__(cls, attr):

@@ -1,22 +1,27 @@
-import weakref, copy
+import weakref
+import copy
 
 from pyorm.token import *
 
 
 def calc_tokens(expr1, expr2, op, right=False):
     """
-        This function is used to condense the repeated code from the OP_ADD, OP_SUB, OP_OR,
-        and OP_AND expression types, since it's the same code for each of these operations.
+        This function is used to condense the repeated code from the OP_ADD,
+        OP_SUB, OP_OR, and OP_AND expression types, since it's the same code
+        for each of these operations.
 
-        This function combines the values from two expressions when they share the same operator
-        type.  If the two expressions do not share the same operator type a new expression is
-        returned with expression1 & expression2 as the componenets of the new expression.
+        This function combines the values from two expressions when they share
+        the same operator type.  If the two expressions do not share the same
+        operator type a new expression is returned with
+        `expression1 & expression2` as the componenets of the new expression.
     """
     if right:
-        # This is used for operations coming from the right (__rand__, __radd__, etc.)
+        # This is used for operations coming from the right (__rand__,
+        # __radd__, etc.)
         if expr1.op == op:
             expr1._tokens[:0] = [
-                Token(getattr(expr2, 'token_type', T_LIT), expr2), Token(T_OPR, op)]
+                Token(getattr(expr2, 'token_type', T_LIT), expr2),
+                Token(T_OPR, op)]
             return expr1
         else:
             return Expression(expr2, expr1, op=op)
@@ -30,9 +35,11 @@ def calc_tokens(expr1, expr2, op, right=False):
             else:
                 if len(expr1._tokens):
                     expr1._tokens.extend([
-                        Token(T_OPR, op), Token(getattr(expr2, 'token_type', T_LIT), expr2)])
+                        Token(T_OPR, op),
+                        Token(getattr(expr2, 'token_type', T_LIT), expr2)])
                 else:
-                    expr1._tokens.append(Token(getattr(expr2, 'token_type', T_LIT), expr2))
+                    expr1._tokens.append(
+                        Token(getattr(expr2, 'token_type', T_LIT), expr2))
 
             return expr1
         else:
@@ -41,9 +48,10 @@ def calc_tokens(expr1, expr2, op, right=False):
 
 class Expression(object):
     """
-        The Expression class, is used for storing expression values and operators and converting
-        them to a set of tokens for both the connection dialect to turn into a sql statement, as
-        well as a hashable set of values, so that any sql generated can be cached for later use.
+        The Expression class, is used for storing expression values and
+        operators and converting them to a set of tokens for both the
+        connection dialect to turn into a sql statement, as well as a hashable
+        set of values, so that any sql generated can be cached for later use.
 
         The default operator used for expressions is 'AND', so:
             Expression(value1, value2)
@@ -51,23 +59,26 @@ class Expression(object):
         Would output:
             '(value1 AND value2)'
 
-        You can also set the operator for a given Expression using the `op` keyword param:
+        You can also set the operator for a given Expression using the `op`
+        keyword param:
             Expression(value1, value2, value3, op=OP_ADD)
 
         Would output:
             '(value1 + value2 + value3)'
 
-        The third function of the Expression class provides the ability to use operators directly on an
-        Expression instance and another object (even another Expression):
+        The third function of the Expression class provides the ability to use
+        operators directly on an Expression instance and another object (even
+        another Expression):
             Expression(value1, value2, op=OP_ADD) * 3
-            Expression(value1, value2, op=OP_ADD) * Expression(value3, value4, op=OP_SUB)
+            Expression(value1, value2, op=OP_ADD) * Expression(
+                value3, value4, op=OP_SUB)
 
         Would output:
             '(value1 + value2) * 3'
             '(value1 + value2) * (value3 - value4)
-        Stores an expression in the form of a list of tokens, which are converted
-        to SQL by the database dialect.  The tokens are also used when looking up
-        pre-generated sql from the cache.
+        Stores an expression in the form of a list of tokens, which are
+        converted to SQL by the database dialect.  The tokens are also used
+        when looking up pre-generated sql from the cache.
     """
     __slots__ = ('op', '_tokens', 'token_type', 'alias', '_owner')
 
@@ -96,7 +107,8 @@ class Expression(object):
             else:
                 tokens.append(token)
 
-        #if self.op in (OP_MUL, OP_DIV, OP_MOD, OP_POW, OP_ADD, OP_SUB, OP_OR, OP_AND):
+        # if self.op in (OP_MUL, OP_DIV, OP_MOD, OP_POW, OP_ADD, OP_SUB,
+        # OP_OR, OP_AND):
         tokens.insert(0, Token(T_OPR, OP_OPAR))
         tokens.append(Token(T_OPR, OP_CPAR))
 
@@ -120,8 +132,8 @@ class Expression(object):
         self._tokens = []
         self.alias = kwargs.get('alias', None)
 
-        # if arguments were passed, we need to load & tokenize them here
-        # adding an operator token between each arg as we go
+        # if arguments were passed, we need to load & tokenize them
+        # here adding an operator token between each arg as we go
         if len(args):
             max_idx = len(args) - 1
 
@@ -144,7 +156,8 @@ class Expression(object):
         memo[id(self)] = instance
         instance._tokens = copy.deepcopy(self._tokens)
 
-        # Alias should always be a string/unicode object, so we shouldn't need to deep copy it.
+        # Alias should always be a string/unicode object, so we
+        # shouldn't need to deep copy it.
         instance.alias = self.alias
         instance._owner = self._owner
 
@@ -229,15 +242,16 @@ class Expression(object):
 
 class Equation(Expression):
     """
-        Equation objects are very similar to Expression objects, with the only difference
-        being that Equation objects are only equations between a Column and a literal value.
+        Equation objects are very similar to Expression objects, with the only
+        difference being that Equation objects are only equations between a
+        Column and a literal value.
 
-        These interactions are separated out so that the literal may be converted using the
-        column's to_db() method.
+        These interactions are separated out so that the literal may be
+        converted using the column's to_db() method.
 
-        A model assignment is needed in order to ensure that the actual field is available
-        and the Field.to_db() method is accessable. if the Field.to_db() method is unavailable,
-        the raw literal is returned.
+        A model assignment is needed in order to ensure that the actual field
+        is available and the Field.to_db() method is accessable. if the
+        Field.to_db() method is unavailable, the raw literal is returned.
     """
     token_type = T_EQU
 
@@ -263,11 +277,12 @@ class Equation(Expression):
                     literal = field.cls.to_db(literal)
 
             except AttributeError:
-                # We couldn't find the to_db method or the field at all. In these cases, just
-                # return the raw value. NOTE: I may want to re-think this and actually throw
-                # an error if the relationship or column referenced could not be found in the
-                # list of defined relationships (especially now that relationships can be added
-                # on an as needed basis).
+                # We couldn't find the to_db method or the field at all. In
+                # these cases, just return the raw value. NOTE: I may want to
+                # re-think this and actually throw an error if the
+                # relationship or column referenced could not be found in the
+                # list of defined relationships (especially now that
+                # relationships can be added on an as needed basis).
                 pass
 
         return [literal]

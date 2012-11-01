@@ -1,4 +1,6 @@
-import unittest, weakref, copy
+import unittest
+import weakref
+import copy
 
 from pyorm.column import Column
 from pyorm.expression import Expression, Equation
@@ -17,7 +19,7 @@ class ColumnTestCase(unittest.TestCase):
             path chain based on the attributes accessed.
         """
         col = Column.test.column.chain
-        self.assertEqual(col._path, ['test','column','chain'])
+        self.assertEqual(col._path, ['test', 'column', 'chain'])
 
     def test_alias(self):
         """
@@ -72,7 +74,6 @@ class ColumnTestCase(unittest.TestCase):
 
         self.assertNotEqual(id(col), id(col_copy))
         self.assertEqual(id(col._owner), id(col_copy._owner))
-        
 
     def test_deepcopy(self):
         """
@@ -234,7 +235,7 @@ class ColumnTestCase(unittest.TestCase):
         self.assertEqual(exp._tokens[0].type, T_COL)
         self.assertEqual(exp._tokens[-1].type, T_LIT)
 
-        exp = Column.test != None
+        exp = Column.test is not None
         self.assertEqual(type(exp), Equation)
         self.assertEqual(exp.op, OP_NULLNE)
         self.assertEqual(exp._tokens[0].type, T_COL)
@@ -253,7 +254,7 @@ class ColumnTestCase(unittest.TestCase):
         self.assertEqual(exp._tokens[0].type, T_COL)
         self.assertEqual(exp._tokens[-1].type, T_LIT)
 
-        exp = Column.test == None
+        exp = Column.test is None
         self.assertEqual(type(exp), Equation)
         self.assertEqual(exp.op, OP_NULLEQ)
         self.assertEqual(exp._tokens[0].type, T_COL)
