@@ -4,6 +4,11 @@ from pyorm.expression import Expression, Equation, calc_tokens
 from pyorm.token import *
 
 
+class MockOwner(object):
+    def __hash__(self):
+        return 1
+
+
 class CalcTokensTestCase(unittest.TestCase):
     def test_calc_tokens_new_expr(self):
         expr1 = Expression(1, OP_ADD)
@@ -46,3 +51,15 @@ class CalcTokensTestCase(unittest.TestCase):
 
         new_expr = calc_tokens(expr2, expr1, op=OP_ADD, right=True)
         self.assertEqual(id(new_expr), expr1)
+
+
+class ExpressionTestCase(unittest.TestCase):
+    def test_literals(self):
+        expr = Expression(1, 3, 2, 4, op=OP_SUB)
+        self.assertEqual(expr, [1, 3, 2, 4])
+
+    def test_nested_literals(self):
+        expr1 = Expression(2, 3, 4, op=OP_SUB)
+        expr2 = Expression(1, expr1, 5, 6, op=OP_ADD)
+        self.assertEqual(expr2.literals, [1, 2, 3, 4, 5, 6])
+
