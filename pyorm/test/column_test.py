@@ -235,7 +235,7 @@ class ColumnTestCase(unittest.TestCase):
         self.assertEqual(exp._tokens[0].type, T_COL)
         self.assertEqual(exp._tokens[-1].type, T_LIT)
 
-        exp = Column.test is not None
+        exp = Column.test != None
         self.assertEqual(type(exp), Equation)
         self.assertEqual(exp.op, OP_NULLNE)
         self.assertEqual(exp._tokens[0].type, T_COL)
@@ -254,7 +254,7 @@ class ColumnTestCase(unittest.TestCase):
         self.assertEqual(exp._tokens[0].type, T_COL)
         self.assertEqual(exp._tokens[-1].type, T_LIT)
 
-        exp = Column.test is None
+        exp = Column.test == None
         self.assertEqual(type(exp), Equation)
         self.assertEqual(exp.op, OP_NULLEQ)
         self.assertEqual(exp._tokens[0].type, T_COL)

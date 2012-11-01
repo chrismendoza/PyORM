@@ -18,13 +18,13 @@ def calc_tokens(expr1, expr2, op, right=False):
     if right:
         # This is used for operations coming from the right (__rand__,
         # __radd__, etc.)
-        if expr1.op == op:
-            expr1._tokens[:0] = [
-                Token(getattr(expr2, 'token_type', T_LIT), expr2),
+        if expr2.op == op:
+            expr2._tokens[:0] = [
+                Token(getattr(expr1, 'token_type', T_LIT), expr1),
                 Token(T_OPR, op)]
-            return expr1
+            return expr2
         else:
-            return Expression(expr2, expr1, op=op)
+            return Expression(expr1, expr2, op=op)
     else:
         if expr1.op == op:
             if getattr(expr2, 'token_type', None) == T_EXP and expr1.op == expr2.op:
@@ -167,25 +167,25 @@ class Expression(object):
         return calc_tokens(self, other, op=OP_AND)
 
     def __rand__(self, other):
-        return calc_tokens(self, other, op=OP_AND, right=True)
+        return calc_tokens(other, self, op=OP_AND, right=True)
 
     def __or__(self, other):
         return calc_tokens(self, other, op=OP_OR)
 
     def __ror__(self, other):
-        return calc_tokens(self, other, op=OP_OR, right=True)
+        return calc_tokens(other, self, op=OP_OR, right=True)
 
     def __add__(self, other):
         return calc_tokens(self, other, op=OP_ADD)
 
     def __radd__(self, other):
-        return calc_tokens(self, other, op=OP_ADD, right=True)
+        return calc_tokens(other, self, op=OP_ADD, right=True)
 
     def __sub__(self, other):
         return calc_tokens(self, other, op=OP_SUB)
 
     def __rsub__(self, other):
-        return calc_tokens(self, other, op=OP_SUB, right=True)
+        return calc_tokens(other, self, op=OP_SUB, right=True)
 
     def __mul__(self, other):
         return Expression(self, other, op=OP_MUL)
