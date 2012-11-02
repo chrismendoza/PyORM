@@ -73,22 +73,44 @@ class MetaIndexes(type):
         definitions on Model.__new__().  This handles collection of unbound objects,
         as well as the binding when the Indexes class for that model is instantiated.
     """
-    def __getattr__(cls, attr):
+    def __getattribute__(cls, attr):
         """
-            If `_unbound` is accessed, create the list (if it had already been
-            done, we would never have gotten here).
+            Return the given unbound index class.  If the _unbound list has not
+            yet been generated, we generate it here (which also sets the translated
+            name on the unbound object).
         """
-        if attr == '_unbound':
-            # push the defined indexes into a list on the model the first time
-            # the _unbound object is accessed.
+        def generate_unbound(cls):
             cls._unbound = []
 
             for name, item in cls.__dict__.items():
-                if hasattr(item, bind):
+                if hasattr(item, 'bind'):
                     cls._unbound.append(name)
 
+                    if name[-1] == '_':
+                        trans_name = name[:-1]
+                    else:
+                        trans_name = name
+
+                    item.name = trans_name
+
             return cls._unbound
-        else:
+
+        try:
+            if attr == '_unbound':
+                # push the defined indexes into a list on the model the first time
+                # the _unbound object is accessed.
+                try:
+                    return type.__getattribute__(cls, '_unbound')
+                except AttributeError:
+                    return generate_unbound(cls)
+            else:
+                try:
+                    type.__getattribute__(cls, '_unbound')
+                except AttributeError:
+                    generate_unbound(cls)
+
+                return type.__getattribute__(cls, attr)
+        except AttributeError:
             raise AttributeError(attr)
 
     def __call__(cls, *args, **kwargs):
@@ -99,11 +121,11 @@ class MetaIndexes(type):
             exists).
         """
         instance = cls.__new__(cls)
+        instance._owner = weakref.proxy(kwargs['_owner'])
+        instance._owner_ref = weakref.ref(kwargs['_owner'])
+        del(kwargs['_owner'])
 
-        if kwargs.get('_owner', None):
-            instance._owner = weakref.proxy(kwargs['_owner'])
-
-        for name in instance._unbound:
+        for name in cls._unbound:
             if name[-1] == '_':
                 trans_name = name[:-1]
             else:
