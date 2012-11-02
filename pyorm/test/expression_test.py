@@ -1,3 +1,4 @@
+import copy
 import unittest
 
 from pyorm.expression import Expression, Equation, calc_tokens
@@ -65,3 +66,119 @@ class ExpressionTestCase(unittest.TestCase):
         expr2 = Expression(1, expr1, 5, 6, op=OP_ADD)
         self.assertEqual(expr2.literals, [1, 2, 3, 4, 5, 6])
 
+    def test_tokens(self):
+        expr1 = Expression(1, 2, 3, op=OP_ADD)
+        self.assertEqual(expr1._tokens, [
+                Token(T_LIT, 1),
+                Token(T_OPR, OP_ADD),
+                Token(T_LIT, 2),
+                Token(T_OPR, OP_ADD),
+                Token(T_LIT, 3)
+            ])
+
+    def test_owner(self):
+        expr2 = Expression('test', 'fish', op=OP_SUB)
+        expr1 = Expression(1, 2, expr2, op=OP_ADD)
+        mock_owner = MockOwner()
+
+        expr1.owner = mock_owner
+        self.assertEqual(id(expr1._owner_ref()), id(expr2._owner_ref()))
+    
+    def test_copy(self):
+        expr = Expression(1, 2, 3, Expression(1, 3, 4), op=OP_SUB)
+        mock_owner = MockOwner()
+        expr.owner = mock_owner
+        expr_copy = copy.copy(expr)
+
+        self.assertNotEqual(id(expr), id(expr_copy))
+        self.assertNotEqual(id(expr._tokens), id(expr_copy._tokens))
+        self.assertEqual(
+            [id(t) for t in expr._tokens],
+            [id(t) for t in expr_copy._tokens])
+        self.assertEqual(expr.alias, expr_copy.alias)
+        self.assertEqual(id(expr._owner_ref()), id(expr_copy._owner_ref()))
+
+    def test_deepcopy(self):
+        expr = Expression(1, 2, 3, Expression(1, 3, 4), op=OP_SUB)
+        mock_owner = MockOwner()
+        expr.owner = mock_owner
+        expr_copy = copy.deepcopy(expr)
+
+        self.assertNotEqual(id(expr), id(expr_copy))
+        self.assertNotEqual(id(expr._tokens), id(expr_copy._tokens))
+        self.assertNotEqual(
+            [id(t) for t in expr._tokens],
+            [id(t) for t in expr_copy._tokens])
+        self.assertEqual(expr._tokens, expr_copy._tokens)
+        self.assertEqual(expr.alias, expr_copy.alias)
+        self.assertEqual(id(expr._owner_ref()), id(expr_copy._owner_ref()))
+
+    def test_mul(self):
+        expr = Expression(1, 2, op=OP_ADD) * 4
+        self.assertEqual(expr._tokens[0].type, T_EXP)
+        self.assertEqual(expr._tokens[-1].type, T_LIT)
+
+    def test_rmul(self):
+        expr = 4 / Expression(1, 2, op=OP_ADD)
+        self.assertEqual(expr._tokens[0].type, T_LIT)
+        self.assertEqual(expr._tokens[-1].type, T_EXP)
+
+    def test_div(self):
+        expr = Expression(1, 2, op=OP_ADD) * 4
+        self.assertEqual(expr._tokens[0].type, T_EXP)
+        self.assertEqual(expr._tokens[-1].type, T_LIT)
+
+    def test_rdiv(self):
+        expr = 4 / Expression(1, 2, op=OP_ADD)
+        self.assertEqual(expr._tokens[0].type, T_LIT)
+        self.assertEqual(expr._tokens[-1].type, T_EXP)
+
+    def test_mod(self):
+        expr = Expression(1, 2, op=OP_ADD) % 4
+        self.assertEqual(expr._tokens[0].type, T_EXP)
+        self.assertEqual(expr._tokens[-1].type, T_LIT)
+
+    def test_rmod(self):
+        expr = 4 % Expression(1, 2, op=OP_ADD)
+        self.assertEqual(expr._tokens[0].type, T_LIT)
+        self.assertEqual(expr._tokens[-1].type, T_EXP)
+
+    def test_pow(self):
+        expr = Expression(1, 2, op=OP_ADD) ** 4
+        self.assertEqual(expr._tokens[0].type, T_EXP)
+        self.assertEqual(expr._tokens[-1].type, T_LIT)
+
+    def test_rpow(self):
+        expr = 4 ** Expression(1, 2, op=OP_ADD)
+        self.assertEqual(expr._tokens[0].type, T_LIT)
+        self.assertEqual(expr._tokens[-1].type, T_EXP)
+
+    def test_ne(self):
+        expr = Expression(1, 2, op=OP_ADD) != None
+        self.assertEqual(expr.op, OP_NULLNE)
+
+        expr = Expression(1, 2, op=OP_ADD) != 3
+        self.assertEqual(expr.op, OP_NE)
+
+    def test_eq(self):
+        expr = Expression(1, 2, op=OP_ADD) == None
+        self.assertEqual(expr.op, OP_NULLEQ)
+
+        expr = Expression(1, 2, op=OP_ADD) == 3
+        self.assertEqual(expr.op, OP_EQ)
+
+    def test_lt(self):
+        expr = Expression(1, 2, op=OP_ADD) < 3
+        self.assertEqual(expr.op, OP_LT)
+
+    def test_le(self):
+        expr = Expression(1, 2, op=OP_ADD) <= 3
+        self.assertEqual(expr.op, OP_LE)
+
+    def test_ge(self):
+        expr = Expression(1, 2, op=OP_ADD) > 3
+        self.assertEqual(expr.op, OP_GT)
+
+    def test_gt(self):
+        expr = Expression(1, 2, op=OP_ADD) >= 3
+        self.assertEqual(expr.op, OP_GE)

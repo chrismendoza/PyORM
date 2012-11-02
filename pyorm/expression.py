@@ -80,7 +80,7 @@ class Expression(object):
         converted to SQL by the database dialect.  The tokens are also used
         when looking up pre-generated sql from the cache.
     """
-    __slots__ = ('op', '_tokens', 'token_type', 'alias', '_owner')
+    __slots__ = ('_tokens', 'token_type', '_owner', '_owner_ref', 'alias', 'op')
 
     # If a user ever wants to create a different implementation of
     # the expression class, all they need to do is include this token_type
@@ -122,6 +122,7 @@ class Expression(object):
     def owner(self, value):
         if value is not None:
             self._owner = weakref.proxy(value)
+            self._owner_ref = weakref.ref(value)
 
         for token in self._tokens:
             if token.type in (T_EXP, T_HLP, T_MOD, T_EQU):
@@ -130,6 +131,7 @@ class Expression(object):
     def __init__(self, *args, **kwargs):
         self.op = kwargs.get('op', OP_AND)
         self._tokens = []
+        self._owner = None
         self.alias = kwargs.get('alias', None)
 
         # if arguments were passed, we need to load & tokenize them
@@ -149,6 +151,10 @@ class Expression(object):
     def __copy__(self):
         instance = self.__class__(op=self.op)
         instance._tokens = self._tokens[:]
+        instance.alias = self.alias
+        if self._owner is not None:
+            instance.owner = self._owner_ref()
+
         return instance
 
     def __deepcopy__(self, memo):
@@ -159,7 +165,7 @@ class Expression(object):
         # Alias should always be a string/unicode object, so we
         # shouldn't need to deep copy it.
         instance.alias = self.alias
-        instance._owner = self._owner
+        instance.owner = self._owner_ref()
 
         return instance
 
