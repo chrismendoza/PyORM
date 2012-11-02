@@ -242,8 +242,11 @@ class Expression(object):
         return Expression(self, other, op=OP_GT)
 
     def __hash__(self):
-        return hash((self.alias, tuple([
-            'literal' if token.type == T_LIT else token for token in self.tokens])))
+        hash_values = [self.alias,] + [
+            'literal' if token.type == T_LIT else token for token in self.tokens]
+        if self._owner is not None:
+            hash_values.append(self._owner_ref())
+        return hash(tuple(hash_values))
 
 
 class Equation(Expression):
@@ -271,11 +274,11 @@ class Equation(Expression):
             field = None
 
             try:
-                if len(column.path) > 1:
-                    for step in column.path[:-1]:
+                if len(column._path) > 1:
+                    for step in column._path[:-1]:
                         model = getattr(model.relationships, step).model
 
-                field = getattr(model, column.path[-1])
+                field = getattr(model, column._path[-1])
 
                 if type(literal) in (tuple, set, frozenset, list):
                     literal = [field.cls.to_db(i) for i in literal]

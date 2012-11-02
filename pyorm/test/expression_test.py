@@ -1,13 +1,31 @@
 import copy
 import unittest
 
+from pyorm.column import Column
 from pyorm.expression import Expression, Equation, calc_tokens
 from pyorm.token import *
 
 
+class MockGeneric(object):
+    pass
+
+
 class MockOwner(object):
+    def __init__(self, hash_value=None):
+        self._hash = hash_value if hash_value is not None else 1
+
     def __hash__(self):
-        return 1
+        return self._hash
+
+
+class MockField(object):
+    @classmethod
+    def to_db(cls, value):
+        return hash(value)
+
+
+class MockUnbound(object):
+    cls = MockField
 
 
 class CalcTokensTestCase(unittest.TestCase):
@@ -182,3 +200,40 @@ class ExpressionTestCase(unittest.TestCase):
     def test_gt(self):
         expr = Expression(1, 2, op=OP_ADD) >= 3
         self.assertEqual(expr.op, OP_GE)
+
+    def test_hash(self):
+        expr1 = Expression(1, 2, op=OP_ADD)
+        expr2 = Expression(1, 2, op=OP_ADD)
+        expr3 = Expression(1, 2, op=OP_SUB)
+
+        mock_owner1 = MockOwner(hash_value=3)
+        mock_owner2 = MockOwner(hash_value=2)
+
+        self.assertEqual(hash(expr1), hash(expr2))
+        self.assertNotEqual(hash(expr1), hash(expr3))
+
+        expr1.owner = mock_owner1
+        expr2.owner = mock_owner1
+
+        self.assertEqual(hash(expr1), hash(expr2))
+
+        expr2.owner = mock_owner2
+        self.assertNotEqual(hash(expr1), hash(expr2))
+
+
+class EquationTestCase(unittest.TestCase):
+    def test_literals(self):
+        mock_owner = MockOwner()
+        mock_owner.relationships = MockGeneric()
+        mock_owner.relationships.relationship = MockGeneric()
+        mock_owner.relationships.relationship.model = MockGeneric()
+        mock_owner.relationships.relationship.model.field = MockUnbound()
+
+        # if there is no owner, equation should return the raw value
+        equation = Column.relationship.field == 'test'
+        self.assertEqual(equation.literals, ['test'])
+
+        # if there is an owner, the equation should return the value
+        # as calculated by the field's to_db() method (if it can be found)
+        equation.owner = mock_owner
+        self.assertEqual(equation.literals, [hash('test')])
