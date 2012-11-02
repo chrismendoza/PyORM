@@ -20,15 +20,15 @@ def clones(func):
         return new_instance
 
 
-class MetaMeta(type):
+class Meta(type):
     """
         NOTE: name is stupid, sounds like a little caesar's commercial.
     """
     def __getattr__(cls, attr):
         if attr == 'db_table':
-            cls.db_table = cls.__name__.lower()
+            cls.db_table = cls.owner.__name__.lower()
         elif attr == 'verbose_name':
-            cls.verbose_name = cls.__name__
+            cls.verbose_name = cls.owner.__name__
         elif attr == 'auto_primary_key':
             cls.auto_primary_key = True
         elif attr == 'auto_filters':
@@ -45,11 +45,14 @@ class MetaMeta(type):
         # they are of the correct type, otherwise we assume the user is doing
         # things that will still return the proper data, and doesn't need to be
         # copied.
-        if kwargs.get('_owner', None):
-            instance.owner = weakref.proxy(kwargs['_owner'])
+        instance.owner = weakref.proxy(kwargs['_owner'])
+        instance.owner_ref = weakref.ref(kwargs['_owner'])
+        del(kwargs['_owner'])
 
         if isinstance(cls.db_table, basestring):
             instance.db_table = cls.db_table
+        else:
+            instance.db_table = instance.owner.__class__.__name__
 
         if isinstance(cls.verbose_name, basestring):
             instance.verbose_name = cls.verbose_name
@@ -148,7 +151,7 @@ class MetaModel(type):
             meta = new_class.Meta
 
         if not hasattr(meta, '__metaclass__'):
-            meta.__metaclass = MetaMeta
+            meta.__metaclass__ = Meta
 
     def __call__(cls, *args, **kwargs):
         """

@@ -9,6 +9,7 @@ PyORM.egg-info/top_level.txt
 pyorm/__init__.py
 pyorm/column.py
 pyorm/expression.py
+pyorm/model.py
 pyorm/token.py
 pyorm/test/__init__.py
 pyorm/test/column_test.py
