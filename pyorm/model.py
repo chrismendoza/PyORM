@@ -2,6 +2,9 @@ import copy
 import functools
 import weakref
 
+from pyorm.indexes import MetaIndexes
+from pyorm.meta import Meta
+
 
 def clones(func):
     """
@@ -32,7 +35,7 @@ class MetaModel(type):
         new_class._unbound = []
 
         for name, item in new_class.__dict__.items():
-            if hasattr(item, bind):
+            if hasattr(item, 'bind'):
                 new_class._unbound.append(name)
 
         indexes = getattr(new_class, 'Indexes', None)
@@ -45,8 +48,12 @@ class MetaModel(type):
         # and have a proxy available when the Index.__init__() method is called. This
         # allows the user to reference the instance in Indexes.__init__() if they
         # choose to do so.
+        print type(indexes.__dict__)
         if not hasattr(indexes, '__metaclass__'):
-            indexes.__metaclass__ = MetaIndexes
+            new_class.Indexes = MetaIndexes(
+                indexes.__name__, indexes.__bases__, dict(indexes.__dict__.items()))
+
+        new_class.Indexes.owner = new_class
 
         meta = getattr(new_class, 'Meta', None)
 
@@ -55,7 +62,12 @@ class MetaModel(type):
             meta = new_class.Meta
 
         if not hasattr(meta, '__metaclass__'):
-            meta.__metaclass__ = Meta
+            new_class.Meta = Meta(
+                meta.__name__, meta.__bases__, dict(meta.__dict__.items()))
+
+        new_class.Meta.owner = new_class
+        
+        return new_class
 
     def __call__(cls, *args, **kwargs):
         """
@@ -117,13 +129,14 @@ class MetaModel(type):
         # possible to define an __init__, __new__ or pretty much anything else
         # so properties should work correctly, as should any instance or class
         # method.
-        instance.Meta = cls.Meta()
+        instance.Meta = cls.Meta(_owner=instance)
 
         # if the read or write server are not defined, use the defaults from the
         # session data.  If the session doesn't include a default, blow up.
         for server_type in ('read_server', 'write_server'):
-            server = getattr(meta, server_type,
-                             getattr(instance.objects.session, 'default_{0}'.format(server)))
+            '''
+            server = getattr(instance.Meta, server_type,
+                getattr(instance.objects.session, 'default_{0}'.format(server)))
 
             if isinstance(server, basestring):
                 servers = [copy.copy(server), ]
@@ -131,6 +144,7 @@ class MetaModel(type):
             elif isinstance(server, (list, tuple)):
                 servers = copy.deepcopy(server)
                 setattr(instance.Meta, server_type, servers)
+            '''
 
         instance.__init__(*args, **kwargs)
 
