@@ -4,6 +4,8 @@ import weakref
 
 from pyorm.indexes import MetaIndexes
 from pyorm.meta import Meta
+from pyorm.expression import Expression
+from pyorm.token import *
 
 
 def clones(func):
@@ -48,7 +50,6 @@ class MetaModel(type):
         # and have a proxy available when the Index.__init__() method is called. This
         # allows the user to reference the instance in Indexes.__init__() if they
         # choose to do so.
-        print type(indexes.__dict__)
         if not hasattr(indexes, '__metaclass__'):
             new_class.Indexes = MetaIndexes(
                 indexes.__name__, indexes.__bases__, dict(indexes.__dict__.items()))
@@ -131,6 +132,7 @@ class MetaModel(type):
         # method.
         instance.Meta = cls.Meta(_owner=instance)
 
+        # TODO: Move this section to pyorm.meta.Meta
         # if the read or write server are not defined, use the defaults from the
         # session data.  If the session doesn't include a default, blow up.
         for server_type in ('read_server', 'write_server'):
@@ -146,6 +148,31 @@ class MetaModel(type):
                 setattr(instance.Meta, server_type, servers)
             '''
 
+        instance._fields = Expression(op=OP_COMMA)
+        instance._compound_fields = Expression(op=OP_COMMA)
         instance.__init__(*args, **kwargs)
 
         return instance
+
+
+class Model(object):
+    __metaclass__ = MetaModel
+
+    def __copy__(self):
+        pass
+
+    def __deepcopy__(self):
+        pass
+
+    @clones
+    def fields(self, *args, **kwargs):
+        self._fields.extend(args)
+
+        for arg in kwargs:
+            self._compound_fields.append(arg)
+
+    @clones
+    def filters(self, *args):
+        for arg in args:
+            pass
+

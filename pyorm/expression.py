@@ -248,6 +248,25 @@ class Expression(object):
             hash_values.append(self._owner_ref())
         return hash(tuple(hash_values))
 
+    def append(self, value):
+        if len(self._tokens):
+            self._tokens.append(Token(T_OPR, self.op))
+
+        self._tokens.append(Token(
+            value.token_type if hasattr(value, 'token_type') else T_LIT, value))
+    
+    def extend(self, values):
+        if len(self._tokens):
+            self._tokens.append(Token(T_OPR, self.op))
+        
+        for value in values[:-1]:
+            self._tokens.extend([Token(
+                value.token_type if hasattr(value, 'token_type') else T_LIT, value),
+                Token(T_OPR, self.op)])
+
+        self._tokens.append(Token(
+            value.token_type if hasattr(value, 'token_type') else T_LIT, value))
+
 
 class Equation(Expression):
     """

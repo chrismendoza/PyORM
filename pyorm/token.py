@@ -39,6 +39,6 @@ OP_BT = 19
 
 OP_OPAR = 20
 OP_CPAR = 21
-
+OP_COMMA = 22
 
 Token = collections.namedtuple('Token', ('type', 'value'))

@@ -1,11 +1,12 @@
 import inspect
 import unittest
 
-from pyorm.model import MetaModel
+from pyorm.model import MetaModel, Model
 
 
-class MockModel(object):
-    __metaclass__ = MetaModel
+class MockModel(Model):
+    pass
+
 
 class MetaModelTestCase(unittest.TestCase):
     def test_metamodel_cls_indexes(self):
@@ -23,3 +24,32 @@ class MetaModelTestCase(unittest.TestCase):
         model = MockModel()
         self.assertTrue(hasattr(model, 'Meta'))
         self.assertFalse(inspect.isclass(model.Meta))
+
+    def test_relationships_cls(self):
+        pass
+
+    def test_relationships_instance(self):
+        pass
+
+    def test_fields_cls(self):
+        pass
+    
+    def test_fields_instance(self):
+        pass
+
+
+class ModelTestCase(unittest.TestCase):
+    def test_copy(self):
+        pass
+
+    def test_deepcopy(self):
+        pass
+
+    def test_fields(self):
+        pass
+
+    def test_compound_fields(self):
+        pass
+
+    def test_filters(self):
+        pass
