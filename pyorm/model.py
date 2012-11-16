@@ -166,10 +166,23 @@ class Model(object):
 
     @clones
     def fields(self, *args, **kwargs):
-        self._fields.extend(args)
+        # we compute the hashes of the already selected fields, so that we only
+        # pull back a single instance of the data.  This prevents us from using
+        # more bandwidth than necessary.
+        hashed_fields = [hash(field) for field in fields]
+        for arg in args:
+            if hash(arg) not in hashed_fields:
+                self._fields.append(arg)
 
-        for arg in kwargs:
-            self._compound_fields.append(arg)
+        for key, val in kwargs.items():
+            # If the user redefines an already existing key here, and the
+            # they could overwrite their original expression.  Since this
+            # could be the intended behavior, we make no assumption on which
+            # one they wanted and just replace the old entry.
+
+            # It should be noted that they cannot replace a column defined on
+            # this table, and attempting to do so will throw an exception.
+            self._compound_fields[key] = val
 
     @clones
     def filters(self, *args):
