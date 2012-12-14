@@ -166,6 +166,7 @@ class Model(object):
 
     @clones
     def fields(self, *args, **kwargs):
+        # TODO: Build out field creation objects (CharField, IntField, etc.)
         # we compute the hashes of the already selected fields, so that we only
         # pull back a single instance of the data.  This prevents us from using
         # more bandwidth than necessary.

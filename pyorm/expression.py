@@ -242,6 +242,8 @@ class Expression(object):
         return Expression(self, other, op=OP_GT)
 
     def __hash__(self):
+        # TODO: Possibly move hash creation to the tokens property setter? Would remove the
+        # need to re-hash the expression every time __hash__ is accessed
         hash_values = [self.alias,] + [
             'literal' if token.type == T_LIT else token for token in self.tokens]
         if self._owner is not None:
