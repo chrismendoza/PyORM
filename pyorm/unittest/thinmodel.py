@@ -10,9 +10,11 @@ class DummyObject(Model):
     class Fields(object):
         test = Field()
 
+
 class TestThinModel(unittest.TestCase):
     def setUp(self):
-        self.thinmodel = ThinModel(_model_name='test_name', _model_parent=DummyObject())
+        self.thinmodel = ThinModel(
+            _model_name='test_name', _model_parent=DummyObject())
 
     def test_010(self):
         """ ThinModel: __init__ properly sets up the model object. """
@@ -44,7 +46,8 @@ class TestThinModel(unittest.TestCase):
 
     def test_050(self):
         """ ThinModel: Fields.column_name returns a generic Field() object when queried """
-        self.assertEqual(self.thinmodel.Fields.test.__class__.__name__, 'Field')
+        self.assertEqual(
+            self.thinmodel.Fields.test.__class__.__name__, 'Field')
 
     def test_051(self):
         """ ThinModel: Fields._field_list always returns true when checking for a column """
@@ -57,8 +60,10 @@ class TestThinModel(unittest.TestCase):
     def test_060(self):
         """ ThinModel: _parse_record sets the correct values based on the index passed """
         self.thinmodel._recordset = [
-            {'DummyObject.test_name.field1': 0, 'DummyObject.test_name.field2': 'teststring', 'DummyObject.parentfield': 'parentfield'},
-            {'DummyObject.test_name.field1': 1, 'DummyObject.test_name.field2': 'teststring2', 'DummyObject.parentfield': 'parentfield'}
+            {'DummyObject.test_name.field1': 0, 'DummyObject.test_name.field2':
+                'teststring', 'DummyObject.parentfield': 'parentfield'},
+            {'DummyObject.test_name.field1': 1, 'DummyObject.test_name.field2':
+                'teststring2', 'DummyObject.parentfield': 'parentfield'}
         ]
         for index, row in enumerate(self.thinmodel._recordset):
             self.thinmodel._parse_record(index)
@@ -71,8 +76,10 @@ class TestThinModel(unittest.TestCase):
     def test_070(self):
         """ ThinModel: __iter__ correctly iterates through the records """
         self.thinmodel._recordset = [
-            {'DummyObject.test_name.field1': 0, 'DummyObject.test_name.field2': 'teststring', 'DummyObject.parentfield': 'parentfield'},
-            {'DummyObject.test_name.field1': 1, 'DummyObject.test_name.field2': 'teststring2', 'DummyObject.parentfield': 'parentfield'}
+            {'DummyObject.test_name.field1': 0, 'DummyObject.test_name.field2':
+                'teststring', 'DummyObject.parentfield': 'parentfield'},
+            {'DummyObject.test_name.field1': 1, 'DummyObject.test_name.field2':
+                'teststring2', 'DummyObject.parentfield': 'parentfield'}
         ]
 
         for obj in self.thinmodel:
@@ -83,12 +90,13 @@ class TestThinModel(unittest.TestCase):
     def test_080(self):
         """ ThinModel: __reversed__ correctly iterates through the records """
         self.thinmodel._recordset = [
-            {'DummyObject.test_name.field1': 0, 'DummyObject.test_name.field2': 'teststring', 'DummyObject.parentfield': 'parentfield'},
-            {'DummyObject.test_name.field1': 1, 'DummyObject.test_name.field2': 'teststring2', 'DummyObject.parentfield': 'parentfield'}
+            {'DummyObject.test_name.field1': 0, 'DummyObject.test_name.field2':
+                'teststring', 'DummyObject.parentfield': 'parentfield'},
+            {'DummyObject.test_name.field1': 1, 'DummyObject.test_name.field2':
+                'teststring2', 'DummyObject.parentfield': 'parentfield'}
         ]
 
         for obj in reversed(self.thinmodel):
             self.assertEqual(len(obj._values), 2)
             for column in obj._values.keys():
                 self.assertEqual(obj._recordset[obj._recordindex]['{0}.{1}'.format('.'.join(obj._properties.column_chain), column)], obj._values[column])
-

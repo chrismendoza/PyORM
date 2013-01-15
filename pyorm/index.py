@@ -7,14 +7,18 @@ class Index(object):
         self.declaration_index = Index.declaration_index
         Index.declaration_index += 1
 
+
 class PrimaryKey(Index):
     pass
+
 
 class UniqueIndex(Index):
     pass
 
+
 class FullTextIndex(Index):
     pass
+
 
 class SpatialIndex(Index):
     pass

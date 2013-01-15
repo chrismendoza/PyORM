@@ -39,7 +39,8 @@ class Prop(object):
         elif model is None or model is False:
             self._parent = None
         else:
-            raise TypeError(u'Expected a model, got type: {0}.'.format(type(model).__name__))
+            raise TypeError(u'Expected a model, got type: {0}.'.format(
+                type(model).__name__))
 
         self._tree = None
         self._column_chain = None
@@ -116,7 +117,8 @@ class Prop(object):
         elif model is None or model is False:
             self._subquery_parent = None
         else:
-            raise TypeError(u'Expected a model, got type: {0}.'.format(type(model).__name__))
+            raise TypeError(u'Expected a model, got type: {0}.'.format(
+                type(model).__name__))
 
     @subquery_parent.deleter
     def subquery_parent(self):
@@ -128,7 +130,8 @@ class Prop(object):
         if mode:
             self.mode = mode
         if getattr(self.model.Meta, '{0}_server'.format(self.mode), False):
-            conn = getattr(self.model._connection, getattr(self.model.Meta, '{0}_server'.format(self.mode)))
+            conn = getattr(self.model._connection, getattr(
+                self.model.Meta, '{0}_server'.format(self.mode)))
         else:
             conn = getattr(self.model._connection, getattr(self.model._connection._config, 'default_{0}_server'.format(self.mode)))
         return conn
@@ -178,4 +181,3 @@ class Prop(object):
         """ initialize the model properties """
         self.model = model
         self.wrap = True
-

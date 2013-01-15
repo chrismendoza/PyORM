@@ -5,6 +5,7 @@ from pyorm.model.thinmodel import ThinModel
 from pyorm.token import Token
 import pyorm.model
 
+
 class Helper(Expression):
     def __init__(self, *args, **kwargs):
         Expression.__init__(self, *args)
@@ -16,6 +17,7 @@ class Helper(Expression):
         tokens = [(Token.Keyword, self.__class__.__name__)]
         tokens.extend(Expression.tokenize(self))
         return tokens
+
 
 class Values(Helper):
     def __init__(self, *args):
@@ -31,6 +33,7 @@ class Values(Helper):
         tokens.extend(self._columns.tokenize())
         tokens.extend(Helper.tokenize(self))
         return tokens
+
 
 class Union(ThinModel):
     def __init__(self, *args):
@@ -97,7 +100,6 @@ class Union(ThinModel):
         model._add_unique_fields = False
         self.models.append(model)
 
-
     def tokenize(self):
         tokens = []
 
@@ -137,10 +139,12 @@ class Union(ThinModel):
         self._order.extend(args)
         return self
 
+
 class Distinct(Helper):
     def __init__(self, *args):
         Helper.__init__(self, *args)
         self._force_enclose = False
+
 
 class Descending(Helper):
     def __init__(self, *args):
@@ -152,6 +156,7 @@ class Descending(Helper):
         tokens.append((Token.Keyword, self.__class__.__name__))
         return tokens
 
+
 class Ascending(Helper):
     def __init__(self, *args):
         Helper.__init__(self, *args)
@@ -162,6 +167,7 @@ class Ascending(Helper):
         tokens.append((Token.Keyword, self.__class__.__name__))
         return tokens
 
+
 class Bitwise(Helper):
     def tokenize(self):
         tokens = []
@@ -170,43 +176,50 @@ class Bitwise(Helper):
         for index, token in enumerate(tokens):
             if token[0] is Token.Operator:
                 if token[1] in ('AND', 'OR'):
-                    tokens[index] = (Token.Operator, 'BITWISE_{0}'.format(token[1]))
+                    tokens[index] = (
+                        Token.Operator, 'BITWISE_{0}'.format(token[1]))
 
         return tokens
+
 
 class GroupConcat(Helper):
     def __init__(self, *args, **kwargs):
         Helper.__init__(self, *args, **kwargs)
         if kwargs.get('order', False):
             if type(kwargs['order']) in (list, tuple):
-                self.keywords['order'] = Expression(*kwargs['order']).operator(',')
+                self.keywords['order'] = Expression(
+                    *kwargs['order']).operator(',')
             else:
-                self.keywords['order'] = Expression(kwargs['order']).operator(',')
+                self.keywords['order'] = Expression(kwargs[
+                                                    'order']).operator(',')
         self.keywords['separator'] = kwargs.get('separator', ',')
 
     def tokenize(self):
         tokens = Helper.tokenize(self)
         for i, token in enumerate(reversed(tokens)):
             if token[0] is Token.Operator:
-                index = (i + 1) * -1;
-                break;
+                index = (i + 1) * -1
+                break
         end_op = tokens[index:]
         tokens = tokens[:index]
         if self.keywords.get('order', False):
             tokens.append((Token.Keyword, 'ORDER'))
             tokens.extend(self.keywords['order'].tokenize())
 
-        tokens.extend([(Token.Keyword, 'SEPARATOR'), (Token.Literal, self.keywords['separator'])])
+        tokens.extend([(Token.Keyword, 'SEPARATOR'), (
+            Token.Literal, self.keywords['separator'])])
         tokens.extend(end_op)
 
         return tokens
+
 
 class Match(Helper):
     def __init__(self, *args, **kwargs):
         Helper.__init__(self, *args, **kwargs)
         self.match = Expression(kwargs.get('against', ''))
         self.keywords['boolean_mode'] = kwargs.get('boolean_mode', False)
-        self.keywords['natural_language'] = kwargs.get('natural_language', False)
+        self.keywords['natural_language'] = kwargs.get(
+            'natural_language', False)
         self.keywords['query_expand'] = kwargs.get('query_expand', False)
 
     def tokenize(self):
@@ -223,50 +236,66 @@ class Match(Helper):
 
         return tokens
 
+
 class Count(Helper):
     pass
+
 
 class Sum(Helper):
     pass
 
+
 class Average(Helper):
     pass
+
 
 class Minimum(Helper):
     pass
 
+
 class Maximum(Helper):
     pass
+
 
 class Concat(Helper):
     pass
 
+
 class Replace(Helper):
     pass
+
 
 class If(Helper):
     pass
 
+
 class Coalesce(Helper):
     pass
+
 
 class IfNull(Helper):
     pass
 
+
 class NullIf(Helper):
     pass
+
 
 class Unix_Timestamp(Helper):
     pass
 
+
 class From_Unixtime(Helper):
     pass
+
 
 class Now(Helper):
     pass
 
+
 class CurrentTimestamp(Helper):
     pass
+
 
 class Rand(Helper):
     pass

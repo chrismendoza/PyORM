@@ -3,6 +3,7 @@ import unittest
 
 from pyorm.nodelist import NodeList
 
+
 class TestNodeList(unittest.TestCase):
 
     def setUp(self):
@@ -27,20 +28,24 @@ class TestNodeList(unittest.TestCase):
         nodecopy = copy.copy(self.nodelist)
         self.assertEqual(self.nodelist._node_list, nodecopy._node_list)
         self.assertNotEqual(id(self.nodelist), id(nodecopy))
-        self.assertNotEqual(id(self.nodelist._node_list), id(nodecopy._node_list))
+        self.assertNotEqual(
+            id(self.nodelist._node_list), id(nodecopy._node_list))
         for i in range(0, len(self.nodelist)):
-            self.assertEqual(id(self.nodelist._node_list[i]), id(nodecopy._node_list[i]))
+            self.assertEqual(
+                id(self.nodelist._node_list[i]), id(nodecopy._node_list[i]))
 
     def test_030(self):
         """ NodeList: __deepcopy__ works as expected, copying objects in the list. """
         nodedeepcopy = copy.deepcopy(self.nodelist)
         self.assertNotEqual(id(self.nodelist), id(nodedeepcopy))
-        self.assertNotEqual(id(self.nodelist._node_list), id(nodedeepcopy._node_list))
+        self.assertNotEqual(
+            id(self.nodelist._node_list), id(nodedeepcopy._node_list))
         for i in range(0, len(self.nodelist)):
-            # only check dict/list/tuple/NodeList items (string, unicode, float, int all produce 
+            # only check dict/list/tuple/NodeList items (string, unicode, float, int all produce
             # the same id() value despite being different objects)
             if isinstance(self.nodelist._node_list[i], (list, tuple, dict, NodeList)):
-                self.assertNotEqual(id(self.nodelist._node_list[i]), id(nodedeepcopy._node_list[i]))
+                self.assertNotEqual(id(self.nodelist._node_list[
+                                    i]), id(nodedeepcopy._node_list[i]))
 
     def test_040(self):
         """ NodeList: __len__ returns the proper length from NodeList._node_list. """
@@ -70,8 +75,9 @@ class TestNodeList(unittest.TestCase):
 
     def test_070(self):
         """ NodeList: append to NodeList works properly when presented with data """
-        self.sample_data.append(['list','append'])
-        self.assertEqual(self.nodelist.append(['list','append'])._node_list, self.sample_data)
+        self.sample_data.append(['list', 'append'])
+        self.assertEqual(self.nodelist.append(
+            ['list', 'append'])._node_list, self.sample_data)
 
     def test_071(self):
         """ NodeList: append to NodeList raises TypeError when supplied no data """
@@ -80,27 +86,32 @@ class TestNodeList(unittest.TestCase):
     def test_080(self):
         """ NodeList: extend NodeList with list properly extends the node list. """
         self.sample_data.extend(['list', 'append'])
-        self.assertEqual(self.nodelist.extend(['list','append'])._node_list, self.sample_data)
+        self.assertEqual(self.nodelist.extend(
+            ['list', 'append'])._node_list, self.sample_data)
 
     def test_081(self):
         """ NodeList: extend NodeList with NodeList properly extends the node list. """
         self.sample_data.extend(['list', 'append'])
-        self.assertEqual(self.nodelist.extend(NodeList('list','append'))._node_list, self.sample_data)
+        self.assertEqual(self.nodelist.extend(
+            NodeList('list', 'append'))._node_list, self.sample_data)
 
     def test_082(self):
         """ NodeList: extend NodeList with a non-iterable appends instead. """
         self.sample_data.append(123)
-        self.assertEqual(self.nodelist.extend(123)._node_list, self.sample_data)
+        self.assertEqual(
+            self.nodelist.extend(123)._node_list, self.sample_data)
 
     def test_090(self):
         """ NodeList: insert into NodeList properly inserts into position. """
         self.sample_data.insert(0, 'cheese')
-        self.assertEqual(self.nodelist.insert(0, 'cheese')._node_list, self.sample_data)
+        self.assertEqual(
+            self.nodelist.insert(0, 'cheese')._node_list, self.sample_data)
 
     def test_100(self):
         """ NodeList: remove from NodeList works when provided a correct value."""
         self.sample_data.remove('test')
-        self.assertEqual(self.nodelist.remove('test')._node_list, self.sample_data)
+        self.assertEqual(
+            self.nodelist.remove('test')._node_list, self.sample_data)
 
     def test_101(self):
         """ NodeList: remove from NodeList ignores incorrect values. """

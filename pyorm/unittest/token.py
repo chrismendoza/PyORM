@@ -1,6 +1,7 @@
 from pyorm.token import Token
 import unittest
 
+
 class TestToken(unittest.TestCase):
     def test_001(self):
         """ Token: __getattr__ returns the correct value for the given name """

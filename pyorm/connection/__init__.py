@@ -52,7 +52,8 @@ class Connection(object):
         dialect = config.get('dialect', False)
         if dialect:
             try:
-                mod = __import__('pyorm.connection.{0}'.format(dialect), {}, {}, '{0}Connection'.format(dialect))
+                mod = __import__('pyorm.connection.{0}'.format(
+                    dialect), {}, {}, '{0}Connection'.format(dialect))
                 conn = getattr(mod, '{0}Connection'.format(dialect), None)
             except ImportError:
                 raise exceptions.DialectNotFoundError(dialect, server)
@@ -104,4 +105,3 @@ class Connection(object):
             return self._connections[server]
         else:
             return False
-

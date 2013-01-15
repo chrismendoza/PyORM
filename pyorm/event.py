@@ -22,7 +22,8 @@ class Event(object):
             if event not in Event.listeners:
                 Event.listeners[event] = []
             try:
-                del(Event.listeners[event][Event.listeners[event].index(listener)])
+                del(Event.listeners[event][Event.listeners[
+                    event].index(listener)])
             except:
                 pass
 
@@ -57,19 +58,25 @@ def event_decorator(*eargs):
     if len(eargs) and callable(eargs[0]):
         func = eargs[0]
         name = func.__name__
+
         def wrapper(*args, **kwargs):
             preresponse = Event.fire('pre{0}'.format(name), args, kwargs)
-            response = func(*preresponse.get('args', ()), **preresponse.get('kwargs', {}))
-            response = Event.fire('post{0}'.format(name), args, kwargs, response)
+            response = func(
+                *preresponse.get('args', ()), **preresponse.get('kwargs', {}))
+            response = Event.fire(
+                'post{0}'.format(name), args, kwargs, response)
             return response
         return wrapper
     else:
         name = eargs[0]
+
         def func_wrapper(func):
             def wrapper(*args, **kwargs):
                 preresponse = Event.fire('pre{0}'.format(name), args, kwargs)
-                response = func(*preresponse.get('args', ()), **preresponse.get('kwargs', {}))
-                response = Event.fire('post{0}'.format(name), args, kwargs, response)
+                response = func(*preresponse.get(
+                    'args', ()), **preresponse.get('kwargs', {}))
+                response = Event.fire(
+                    'post{0}'.format(name), args, kwargs, response)
                 return response
             return wrapper
         return func_wrapper

@@ -2,6 +2,7 @@ from pyorm.column import Column
 import copy
 import unittest
 
+
 class TestColumn(unittest.TestCase):
 
     def setUp(self):
@@ -10,12 +11,15 @@ class TestColumn(unittest.TestCase):
     def test_010(self):
         """ Column: __init__ properly set up when using class attribute accessor. """
         column = Column.relationship1.relationship2.relationship3.field
-        self.assertEqual(column._queue, ['relationship1', 'relationship2', 'relationship3', 'field'])
+        self.assertEqual(column._queue, ['relationship1',
+                         'relationship2', 'relationship3', 'field'])
 
     def test_011(self):
         """ Column: __init__ properly set up when using __init__ directly. """
-        column = Column(['relationship1', 'relationship2','relationship3'], 'field')
-        self.assertEqual(column._queue, ['relationship1', 'relationship2', 'relationship3', 'field'])
+        column = Column(
+            ['relationship1', 'relationship2', 'relationship3'], 'field')
+        self.assertEqual(column._queue, ['relationship1',
+                         'relationship2', 'relationship3', 'field'])
 
     def test_012(self):
         """ Column: __init__ properly set up when using __init__ directly with no relations. """
@@ -24,14 +28,18 @@ class TestColumn(unittest.TestCase):
 
     def test_020(self):
         """ Column: __init__ properly set up when using class attribute accessor and parent scope. """
-        column = Column(scope='parent').relationship1.relationship2.relationship3.field
-        self.assertEqual(column._queue, ['relationship1', 'relationship2', 'relationship3', 'field'])
+        column = Column(
+            scope='parent').relationship1.relationship2.relationship3.field
+        self.assertEqual(column._queue, ['relationship1',
+                         'relationship2', 'relationship3', 'field'])
         self.assertTrue(column._scope)
 
     def test_021(self):
         """ Column: __init__ properly set up when using __init__ directly with parent scope. """
-        column = Column(['relationship1', 'relationship2','relationship3'], 'field', 'parent')
-        self.assertEqual(column._queue, ['relationship1', 'relationship2', 'relationship3', 'field'])
+        column = Column(['relationship1', 'relationship2',
+                        'relationship3'], 'field', 'parent')
+        self.assertEqual(column._queue, ['relationship1',
+                         'relationship2', 'relationship3', 'field'])
 
     def test_030(self):
         """ Column: __copy__ makes a correct copy of a column object """
@@ -53,4 +61,5 @@ class TestColumn(unittest.TestCase):
     def test_050(self):
         """ Column: __str__ method prints generic format correctly"""
         column = Column.relationship1.relationship2.relationship3.field
-        self.assertEqual(str(column), 'relationship1.relationship2.relationship3.field')
+        self.assertEqual(
+            str(column), 'relationship1.relationship2.relationship3.field')

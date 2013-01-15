@@ -16,6 +16,7 @@ class DBConfig(object):
     default_read_server = 'Test'
     default_write_server = 'Test'
 
+
 class TestConnection(unittest.TestCase):
 
     def setUp(self):

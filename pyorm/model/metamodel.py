@@ -7,6 +7,7 @@ from pyorm.field import Field
 from pyorm.index import Index, PrimaryKey, UniqueIndex
 from pyorm.relationship import Relationship
 
+
 class MetaModel(type):
     """
         MetaModel is the metaclass for creating new model classes, inserting missing optional
@@ -67,25 +68,29 @@ class MetaModel(type):
         new_class.Fields._field_list = tuple(field_list)
 
         # Loop through the allowable types
-        for optional_class in {'Relationships','Indexes','Meta'}:
+        for optional_class in {'Relationships', 'Indexes', 'Meta'}:
             if not getattr(new_class, optional_class, False):
-                # fill in the optional classes that are missing to prevent references to 
+                # fill in the optional classes that are missing to prevent references to
                 # objects that dont exist, as well as having to check for the object
-                setattr(new_class, optional_class, type(optional_class, (object,), {})())
+                setattr(new_class, optional_class, type(
+                    optional_class, (object,), {})())
 
             if optional_class == 'Relationships':
                 relationship_list = []
-                relationship_objects = cls.sorted_object_matches(new_class.Relationships, Relationship)
+                relationship_objects = cls.sorted_object_matches(
+                    new_class.Relationships, Relationship)
 
                 for relationship_name, relationship, dindex in relationship_objects:
                     relationship_list.append(relationship_name)
 
-                new_class.Relationships._relationship_list = tuple(relationship_list)
+                new_class.Relationships._relationship_list = tuple(
+                    relationship_list)
                 new_class.Relationships._thin_relationship_list = []
 
             elif optional_class == 'Indexes':
                 index_list = []
-                index_objects = cls.sorted_object_matches(new_class.Indexes, Index)
+                index_objects = cls.sorted_object_matches(
+                    new_class.Indexes, Index)
 
                 primary_key_on_fields = bool(len(unique_fields))
 
@@ -108,8 +113,8 @@ class MetaModel(type):
         if not getattr(new_class.Meta, u'table', False):
             new_class.Meta.table = name
 
-        # set the model alias (this is normally the name of the model, 
-        # but in the case of relations this is the relationship name, 
+        # set the model alias (this is normally the name of the model,
+        # but in the case of relations this is the relationship name,
         # which is set by the parent)
         new_class.Meta.table_alias = name
 
@@ -134,4 +139,3 @@ class MetaModel(type):
             raise DeclarationIndexMissingError(sub_type)
 
         return sorted(sub_objects, key=operator.itemgetter(2))
-

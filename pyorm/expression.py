@@ -24,7 +24,8 @@ class Expression(NodeList):
         The third function of the Expression class provides the ability to use operators directly on an
         Expression instance and another object (even another Expression):
             Expression(value1, value2).operator('ADD') * 3
-            Expression(value1, value2).operator('ADD') * Expression(value3, value4).operator('SUB')
+            Expression(value1, value2).operator(
+                'ADD') * Expression(value3, value4).operator('SUB')
 
         Would output:
             '(value1 + value2) * 3'
@@ -92,7 +93,8 @@ class Expression(NodeList):
         if self._base_model is not None:
             return self._base_model._properties.connection().dialect.format_expression(self)
         else:
-            retval = (u' {0} '.format(self._operator)).join(str(item) for item in map(f, self._node_list))
+            retval = (u' {0} '.format(self._operator)).join(
+                str(item) for item in map(f, self._node_list))
             if self._operator in ('AND', 'OR', 'ADD', 'SUB', 'DIV', 'MUL', 'MOD', 'POW'):
                 retval = u'({0})'.format(retval)
             if self._alias is not None:
@@ -459,7 +461,8 @@ class Expression(NodeList):
         if type(enclose) is bool:
             self._enclose = enclose
         else:
-            raise TypeError("Expected type 'bool', got '{0}'".format(type(enclose).__name__))
+            raise TypeError("Expected type 'bool', got '{0}'".format(
+                type(enclose).__name__))
         return self
 
     def tokenize(self):
@@ -467,7 +470,8 @@ class Expression(NodeList):
         from pyorm.model import Model
         from pyorm.model.thinmodel import ThinModel
 
-        enclose = (self._operator in ('AND', 'OR', 'ADD', 'SUB', 'DIV', 'MUL', 'MOD') and self._enclose) or self._force_enclose
+        enclose = (self._operator in ('AND', 'OR', 'ADD', 'SUB', 'DIV',
+                   'MUL', 'MOD') and self._enclose) or self._force_enclose
 
         tokens = []
 
@@ -478,7 +482,7 @@ class Expression(NodeList):
         op = self._operator
         for index, token in enumerate(self._node_list):
             if index <= node_end and index is not 0:
-                if op in ('NULLEQ','NULLNE') and self._null_assign:
+                if op in ('NULLEQ', 'NULLNE') and self._null_assign:
                     op = op.replace('NULL', '')
                 tokens.append((Token.Operator, op))
 

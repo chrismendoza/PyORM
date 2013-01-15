@@ -19,25 +19,30 @@ class Relationship(object):
                 try:
                     # first try in the current namespace
                     self._module = __import__(__name__)
-                    self._model = getattr(self._module, self._model_name)(_model_name=self._name, _model_parent=self._parent)
+                    self._model = getattr(self._module, self._model_name)(
+                        _model_name=self._name, _model_parent=self._parent)
                 except AttributeError:
                     try:
                         # Try to import the appropriate module
-                        self._module = __import__(self._import_path, {}, {}, self._model_name)
+                        self._module = __import__(
+                            self._import_path, {}, {}, self._model_name)
                         if getattr(self._module, self._model_name) is types.ModuleType:
                             # if the model name returns a module, use that as the base module
-                            self._module = getattr(self._module, self._model_name)
+                            self._module = getattr(
+                                self._module, self._model_name)
                         # try and instantiate the model
                         Relationship._cache[self._import_path] = self._module
                         self._model = getattr(self._module, self._model_name)(_model_name=self._name, _model_parent=self._parent)
                     except ImportError:
-                        raise Exception('Could not locate model `{0}`.'.format(self._model_name))
+                        raise Exception('Could not locate model `{0}`.'.format(
+                            self._model_name))
                     except Exception as error:
                         # TODO: Custom exception type
                         raise Exception('Could not load model `{0}`, reason: {1}'.format(self._model_name, error))
             else:
                 self._module = Relationship._cache[self._import_path]
-                self._model = getattr(self._module, self._model_name)(_model_name=self._name, _model_parent=self._parent)
+                self._model = getattr(self._module, self._model_name)(
+                    _model_name=self._name, _model_parent=self._parent)
         return self._model
 
     @property
@@ -79,7 +84,8 @@ class Relationship(object):
         self._attached_to = value
 
     def __copy__(self):
-        new_relationship = type(self)(self._import_path, self._model_name, conditions=self._conditions, join=self._join)
+        new_relationship = type(self)(self._import_path, self._model_name,
+                                      conditions=self._conditions, join=self._join)
         new_relationship._model = self._model
         new_relationship._module = self._module
 
@@ -128,17 +134,22 @@ class Relationship(object):
         self._parent = parent
         self._attached_to = {}
 
+
 class OneToOne(Relationship):
     pass
+
 
 class OneToMany(Relationship):
     pass
 
+
 class ManyToOne(Relationship):
     pass
 
+
 class ManyToMany(Relationship):
     pass
+
 
 class ThinRelationship(Relationship):
     pass

@@ -47,7 +47,8 @@ class Model(ThinModel):
         """
         new_copy = type(self)()
         for prop in ('subquery', 'mode', 'escaped_values'):
-            setattr(new_copy._properties, prop, getattr(self._properties, prop))
+            setattr(
+                new_copy._properties, prop, getattr(self._properties, prop))
         for expression_type in ('_standard_fields', '_additional_fields', '_filter', '_group', '_having', '_order'):
             setattr(new_copy, expression_type, getattr(self, expression_type))
         for value in ('_values', '_old_values', '_recordset', '_recordindex'):
@@ -60,9 +61,11 @@ class Model(ThinModel):
         """
         new_copy = type(self)()
         for prop in ('subquery', 'mode', 'escaped_values'):
-            setattr(new_copy._properties, prop, copy.deepcopy(getattr(self._properties, prop)))
+            setattr(new_copy._properties, prop, copy.deepcopy(
+                getattr(self._properties, prop)))
         for expression_type in ('_standard_fields', '_additional_fields', '_filter', '_group', '_having', '_order'):
-            setattr(new_copy, expression_type, copy.deepcopy(getattr(self, expression_type)))
+            setattr(new_copy, expression_type, copy.deepcopy(
+                getattr(self, expression_type)))
         for value in ('_values', '_old_values', '_recordset', '_recordindex'):
             setattr(new_copy, value, copy.deepcopy(getattr(self, value)))
         return new_copy
@@ -111,8 +114,8 @@ class Model(ThinModel):
 
             return copy.deepcopy(val)
 
-        elif ((self._conditions_altered == True or self._fields_altered == True) and \
-            (self._additional_fields.get_alias(name) or name in self.Fields._field_list)):
+        elif ((self._conditions_altered == True or self._fields_altered == True) and
+             (self._additional_fields.get_alias(name) or name in self.Fields._field_list)):
             # The conditions of this model have been altered, try and fetch it,
             # and return the value if there is one.
 
@@ -162,9 +165,11 @@ class Model(ThinModel):
             if self._recordindex is None:
                 lookup_intersection = []
             else:
-                lookup_intersection = set(lookup_list) & set(self._recordset[self._recordindex].keys())
+                lookup_intersection = set(lookup_list) & set(
+                    self._recordset[self._recordindex].keys())
 
-            current_record = self._recordset[self._recordindex] if self._recordindex is not None else {}
+            current_record = self._recordset[
+                self._recordindex] if self._recordindex is not None else {}
 
             if (relationship.attached_to != current_record or relationship._model._recordset is None) and len(lookup_intersection):
                 relationship.attached_to = current_record
@@ -180,7 +185,8 @@ class Model(ThinModel):
                     # Replace all occurances of this model's field within the relationship conditions with
                     # the actual pulled values from this model.
                     for field, val in self._values.items():
-                        conditions.replace_column(Column(False, field), copy.deepcopy(val))
+                        conditions.replace_column(
+                            Column(False, field), copy.deepcopy(val))
 
                     # Replace all the relationship columns with new columns that point directly to the
                     # related model (so it does not try and eager load a model with its own relationship name.
@@ -202,7 +208,8 @@ class Model(ThinModel):
             Allows for setting values on to fields, and disallow any changes directly to relationships,
             also allows a passthru for setting other values on this model.
 
-            If the field is not currently loaded (the user specified fields or the conditions have changed,
+            If the field is not currently loaded (
+                the user specified fields or the conditions have changed,
             repull the data from the table, preserving any changes that have been made prior to pulling the
             new record.
 
@@ -243,7 +250,7 @@ class Model(ThinModel):
                 limit = (0, limit.stop)
 
         if (self._limit is None or (limit[0] == self._limit[0] and limit[1] <= self._limit[1])) and \
-            not (self._conditions_altered or self._fields_altered) and self._recordset is not None:
+                not (self._conditions_altered or self._fields_altered) and self._recordset is not None:
             # The conditions and fields have not been altered since the last query, and the limit requested
             # is within the limit used to pull back those records.  In this case, just update the recordset
             # based on the limit provided.
@@ -284,7 +291,8 @@ class Model(ThinModel):
                 if len(column._queue[:-1]) == 1:
                     if rel not in base.Relationships._thin_relationship_list:
                         # create a Relationship and ThinModel instance by this name
-                        setattr(base.Relationships, rel, ThinRelationship('',''))
+                        setattr(
+                            base.Relationships, rel, ThinRelationship('', ''))
                         new_relationship = getattr(base.Relationships, rel)
                         new_relationship._model = ThinModel()
                         new_relationship.name = rel
@@ -292,7 +300,8 @@ class Model(ThinModel):
                         base.Relationships._thin_relationship_list.append(rel)
                         base = getattr(base.Relationships, rel)
                 else:
-                    raise RelationshipChainError('.'.join(column._queue[:-1]), self.__class__.__name__)
+                    raise RelationshipChainError(
+                        '.'.join(column._queue[:-1]), self.__class__.__name__)
             else:
                 base = getattr(base.Relationships, rel).model
 
@@ -308,7 +317,7 @@ class Model(ThinModel):
             models to be eager loaded and sets them into the self._eager_load dict.
         """
         models = copy.deepcopy(self._eager_load)
-        for attr in ('_standard_fields','_additional_fields','_filter','_group','_having','_order'):
+        for attr in ('_standard_fields', '_additional_fields', '_filter', '_group', '_having', '_order'):
             expression = getattr(self, attr)
             models = expression.auto_eager_loads(models)
             if attr not in ('_standard_fields', '_additional_fields'):
@@ -350,7 +359,7 @@ class Model(ThinModel):
                 new_path.append(path)
                 dict_list.append(new_path)
             else:
-                new_path = [path,]
+                new_path = [path, ]
                 dict_list.append(new_path)
 
             if len(subtree):
@@ -392,7 +401,8 @@ class Model(ThinModel):
                         return rel
 
         for expression in ('_standard_fields', '_additional_fields', '_filter', '_having', '_group', '_order'):
-            tokens = [token for token in getattr(self, expression).tokenize() if token[0] is Token.Model]
+            tokens = [token for token in getattr(
+                self, expression).tokenize() if token[0] is Token.Model]
             for token in tokens:
                 if token[1].Meta.table == table:
                     return token[1]
@@ -512,9 +522,11 @@ class Model(ThinModel):
                             conditions.replace_column(col, self._properties.parent._values[col._queue[-1]])
 
                     for col in conditions.columns():
-                        conditions.replace_column(col, Column(False, col._queue[-1]))
+                        conditions.replace_column(
+                            col, Column(False, col._queue[-1]))
 
-                    defaults[conditions._node_list[0]._queue[-1]] = Expression(*condition._node_list[1:])
+                    defaults[conditions._node_list[0]
+                             ._queue[-1]] = Expression(*condition._node_list[1:])
 
                 else:
                     # Lists of conditions need to be looped over, and we only want to use the equality conditions to pull values from
@@ -526,9 +538,11 @@ class Model(ThinModel):
                                 condition.replace_column(col, self._properties.parent._values[col._queue[-1]])
 
                         for col in condition.columns():
-                                condition.replace_column(col, Column(False, col._queue[-1]))
+                            condition.replace_column(
+                                col, Column(False, col._queue[-1]))
 
-                        defaults[condition._node_list[0]._queue[-1]] = Expression(*condition._node_list[1:])
+                        defaults[condition._node_list[0]._queue[
+                            -1]] = Expression(*condition._node_list[1:])
 
             if len(kwargs):
                 # A single row was provided, use the data provided in the kwargs. If that field was not provided, set the value from
@@ -611,8 +625,8 @@ class Model(ThinModel):
                 field_set = self.Fields._field_list
 
             for name in self.Fields._field_list:
-                 if (name in self._old_values.keys() and self._old_values[name] != self._values[name]) or \
-                 (name in self._values.keys() and name not in self._old_values.keys()):
+                if (name in self._old_values.keys() and self._old_values[name] != self._values[name]) or \
+                        (name in self._values.keys() and name not in self._old_values.keys()):
                     # set any values that have changed into the new standard fields expression, so they
                     # can be properly changed in the database.
                     new_col = Column(False, name) == self._values[name]
@@ -628,7 +642,8 @@ class Model(ThinModel):
             for k in self._old_values.keys():
                 # set the original record values as the filters to be matched when we update
                 if k in field_set:
-                    self._filter.append(Column(False, k) == self._old_values[k])
+                    self._filter.append(
+                        Column(False, k) == self._old_values[k])
 
         elif self._old_values.keys() != self._values.keys():
             diffkeys = set(self._values.keys()) - set(self._old_values.keys())
@@ -660,7 +675,8 @@ class Model(ThinModel):
             for k in self._old_values.keys():
                 # set the original record values as the filters to be matched when we update
                 if k in field_set:
-                    self._filter.append(Column(False, k) == self._old_values[k])
+                    self._filter.append(
+                        Column(False, k) == self._old_values[k])
 
     def get(self, run_query=True):
         """
@@ -682,14 +698,16 @@ class Model(ThinModel):
 
         if (not (len(self._standard_fields) + len(self._additional_fields))) or self._properties.include_regular_fields:
             # add fields from this model
-            self.fields(*[Column(False, name) for name in self.Fields._field_list])
+            self.fields(
+                *[Column(False, name) for name in self.Fields._field_list])
 
             # add fields from eager loaded relationships
             for path in self._dict_tree_iterator(self._eager_load):
                 rel = self._get_rel_from_path(path)
                 if rel is not None:
                     try:
-                        self.fields(*[Column(path, name) for name in rel.Fields._field_list])
+                        self.fields(*[Column(
+                            path, name) for name in rel.Fields._field_list])
                     except TypeError:
                         # ignore it since the field list was not iterable
                         pass
@@ -906,7 +924,7 @@ class Model(ThinModel):
         for field_name, field in kwargs.items():
             if getattr(self.Fields, field_name, False) or \
                 getattr(self.Relationships, field_name, False) or \
-                self._additional_fields.get_alias(field_name):
+                    self._additional_fields.get_alias(field_name):
                 raise FieldError(field_name)
 
             # occasionally it makes sense to return a constant value as an additional field.  This comes in handy when dealing
@@ -914,13 +932,15 @@ class Model(ThinModel):
             # the actual result came from (for instance when dealing with two different tables that return the same set of fields)
             if issubclass(type(field), Column):
                 self._check_column(field)
-                self._additional_fields.append(Expression(field).set_alias(field_name).operator(','))
+                self._additional_fields.append(
+                    Expression(field).set_alias(field_name).operator(','))
             elif issubclass(type(field), Expression):
                 for item in field.columns():
                     self._check_column(item)
                 self._additional_fields.append(field.set_alias(field_name))
             else:
-                self._additional_fields.append(Expression(field).set_alias(field_name).operator(','))
+                self._additional_fields.append(
+                    Expression(field).set_alias(field_name).operator(','))
 
             self._lookup_fields.append(field_name)
 
@@ -956,7 +976,8 @@ class Model(ThinModel):
         """
         ThinModel.reset(self)
         for sql_section in ('standard_fields', 'additional_fields', 'group', 'having', 'order'):
-            setattr(self, u'_{0}'.format(sql_section), Expression().operator(','))
+            setattr(
+                self, u'_{0}'.format(sql_section), Expression().operator(','))
 
         self._filter = Expression().enclose(False)
         self._eager_load = {}
@@ -970,11 +991,13 @@ class Model(ThinModel):
 
         # Since relationships are unique to the model instance, we set them as instance vars here
         self.Relationships = type('Relationships', (object,), {})()
-        self.Relationships._relationship_list = type(self).Relationships._relationship_list
+        self.Relationships._relationship_list = type(
+            self).Relationships._relationship_list
         self.Relationships._thin_relationship_list = []
 
         for name in self.Relationships._relationship_list:
-            relationship = copy.deepcopy(getattr(type(self).Relationships, name))
+            relationship = copy.deepcopy(
+                getattr(type(self).Relationships, name))
             relationship.reset(name, self)
             setattr(self.Relationships, name, relationship)
 
@@ -986,7 +1009,8 @@ class Model(ThinModel):
             self.Meta = type('Meta', (object,), {})()
             for option in ('read_server', 'write_server', 'engine', 'charset', 'union', 'table'):
                 if hasattr(type(self).Meta, option):
-                    setattr(self.Meta, option, copy.copy(getattr(type(self).Meta, option)))
+                    setattr(self.Meta, option,
+                            copy.copy(getattr(type(self).Meta, option)))
 
         return self
 
@@ -1002,7 +1026,8 @@ class Model(ThinModel):
             # a left join off model2 (model2's join type will be preserved).
             Model.join('model2.model3', 'left')
         """
-        expanded_path = '.model.'.join(['Relationships.{0}'.format(relationship) for relationship in path.split('.')]).split('.')
+        expanded_path = '.model.'.join(['Relationships.{0}'.format(
+            relationship) for relationship in path.split('.')]).split('.')
         relationship = reduce(getattr, expanded_path, self)
         relationship._join = join_type.upper()
         if conditions is not None:

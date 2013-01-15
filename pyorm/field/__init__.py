@@ -30,6 +30,7 @@ class Field(object):
 
 class Integer(Field):
     field_type = 'INT'
+
     def __init__(self, length=None, unsigned=True, autoincrement=False, **kwargs):
         Field.__init__(self, **kwargs)
         self.unsigned = unsigned
@@ -53,6 +54,7 @@ class Integer(Field):
                 return value
             else:
                 raise IntegerConversionError(self.name, type(value))
+
 
 class TinyInt(Integer):
     field_type = 'TINYINT'
@@ -95,6 +97,7 @@ class UnixTimestamp(Integer):
 
 class Decimal(Field):
     field_type = 'DECIMAL'
+
     def __init__(self, precision=8, scale=2, unsigned=True, **kwargs):
         Field.__init__(self, **kwargs)
         self.precision = precision
@@ -129,6 +132,7 @@ class LongText(Field):
 
 class Char(Field):
     field_type = 'CHAR'
+
     def __init__(self, length=None, **kwargs):
         Field.__init__(self, **kwargs)
         self.length = length
@@ -140,6 +144,7 @@ class VarChar(Char):
 
 class Date(Field):
     field_type = 'DATE'
+
     def to_db(self, value):
         if value is None:
             return u'0000-00-00'
@@ -148,6 +153,7 @@ class Date(Field):
 
 class Time(Field):
     field_type = 'TIME'
+
     def to_db(self, value):
         if value is None:
             return u'00:00:00'
@@ -156,6 +162,7 @@ class Time(Field):
 
 class TimeStamp(Field):
     field_type = 'TIMESTAMP'
+
     def __init__(self, **kwargs):
         self.onupdate = kwargs.pop('onupdate', None)
         Field.__init__(self, **kwargs)
@@ -168,6 +175,7 @@ class TimeStamp(Field):
 
 class DateTime(Field):
     field_type = 'DATETIME'
+
     def to_db(self, value):
         if value is None:
             return u'0000-00-00 00:00:00'
@@ -192,9 +200,11 @@ class LongBlob(Field):
 
 class Binary(Field):
     field_type = 'BINARY'
+
     def __init__(self, length=None, **kwargs):
         Field.__init__(self, **kwargs)
         self.length = length
+
 
 class VarBinary(Binary):
     field_type = 'VARBINARY'

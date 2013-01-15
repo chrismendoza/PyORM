@@ -1,5 +1,6 @@
 import copy
 
+
 class DataIterator(object):
     """
         DataIterator
@@ -56,7 +57,8 @@ class DataIterator(object):
             dataset.
         """
         if len(self._datafields) == 0 and self._dataset is not None:
-            self._datafields = dict([(key, key) for key in self._dataset[0].keys()])
+            self._datafields = dict(
+                [(key, key) for key in self._dataset[0].keys()])
         return self._datafields
 
     @_lookup_fields.setter
@@ -152,4 +154,3 @@ class DataIterator(object):
         self._recordindex = None
         self._starting_record_index = None
         self._recordset = None
-

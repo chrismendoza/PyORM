@@ -20,7 +20,8 @@ class DatabaseColumnTypeMismatchError(Exception):
 
 class UnionArgumentTypeError(Exception):
     def __init__(self):
-        Exception.__init__(self, u'Unions expect arguments that are subclasses of Model.')
+        Exception.__init__(
+            self, u'Unions expect arguments that are subclasses of Model.')
 
 
 class UnionColumnTypeError(Exception):
@@ -65,7 +66,8 @@ class MultiRowInsertDataError(Exception):
 
 class RecordNotLoadedError(Exception):
     def __init__(self):
-        Exception.__init__(self, u'Tried to update/delete a model with no record loaded.')
+        Exception.__init__(
+            self, u'Tried to update/delete a model with no record loaded.')
 
 
 class NullAssignmentError(Exception):
@@ -81,4 +83,3 @@ class InvalidDefaultError(Exception):
 class DeclarationIndexMissingError(Exception):
     def __init__(self, obj_type):
         Exception.__init__(self, u'Object type `{0}` is missing declaration_index'.format(obj_type.__class__.__name__))
-

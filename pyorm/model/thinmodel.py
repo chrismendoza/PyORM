@@ -3,6 +3,7 @@ import copy
 from pyorm.model.prop import Prop
 from pyorm.field import Field
 
+
 class ThinModel(object):
     def __init__(self, *args, **kwargs):
         self._properties = Prop(self)
@@ -98,7 +99,8 @@ class ThinModel(object):
             model_chain = '.'.join(self._properties.column_chain)
             for key in set(self._lookup_fields):
                 try:
-                    val = self._recordset[index].get('{0}.{1}'.format(model_chain, key), self._recordset[index].get(key))
+                    val = self._recordset[index].get('{0}.{1}'.format(
+                        model_chain, key), self._recordset[index].get(key))
                     self._values[key] = val
                     self._old_values[key] = val
                 except:

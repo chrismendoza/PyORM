@@ -26,7 +26,8 @@ class Column(Expression):
                 (Column.field * 4) == Column.field2
             would be the equivilant of (respectively):
                 Expression(Column.field, 3).operator('EQ')
-                Expression(Expression(Column.field, 4).operator('MUL'), Column.field2).operator('EQ')
+                Expression(Expression(Column.field, 4)
+                           .operator('MUL'), Column.field2).operator('EQ')
 
         for other expression examples
     """
@@ -127,4 +128,3 @@ class Column(Expression):
     @__coupled_pair
     def __ge__(self, other):
         return Expression.__ge__(self, other)
-

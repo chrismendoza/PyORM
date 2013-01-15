@@ -4,6 +4,7 @@ from pyorm.field import Field
 from pyorm.column import Column as C
 import unittest
 
+
 class DBConfig(object):
     Test = {
         'dialect': 'MySQL',
@@ -17,6 +18,7 @@ class DBConfig(object):
     }
     default_read_server = 'Test'
     default_write_server = 'Test'
+
 
 class TestModel(unittest.TestCase):
 
@@ -39,7 +41,8 @@ class TestModel(unittest.TestCase):
                 table = 'testing_model'
 
         self.parenttestmodel = TestParentModel()
-        self.testmodel = TestModel(_model_name='test_model_name', _model_parent=self.parenttestmodel)
+        self.testmodel = TestModel(
+            _model_name='test_model_name', _model_parent=self.parenttestmodel)
 
     def test_001(self):
         """ Model: Prop.name returns the correct name for the model """
@@ -56,7 +59,8 @@ class TestModel(unittest.TestCase):
 
     def test_010(self):
         """ Model: Prop.parent contains the correct parent model """
-        self.assertEqual(self.testmodel._properties.parent.__class__.__name__, 'TestParentModel')
+        self.assertEqual(self.testmodel._properties.parent.__class__.__name__,
+                         'TestParentModel')
 
     def test_011(self):
         """ Model: Prop.parent assignment does not work with non-models (with the exception of None/False) """
@@ -74,8 +78,10 @@ class TestModel(unittest.TestCase):
         """ Model: Prop.parent deletion resets the column_chain and tree values as well """
         del(self.testmodel._properties.parent)
         self.assertEqual(self.testmodel._properties.parent, None)
-        self.assertEqual(self.testmodel._properties.tree, [('test_model_name', 'testing_model', self.testmodel)])
-        self.assertEqual(self.testmodel._properties.column_chain, ['test_model_name'])
+        self.assertEqual(self.testmodel._properties.tree, [(
+            'test_model_name', 'testing_model', self.testmodel)])
+        self.assertEqual(
+            self.testmodel._properties.column_chain, ['test_model_name'])
 
     def test_020(self):
         """ Model: Prop.tree returns a valid set """
@@ -83,7 +89,8 @@ class TestModel(unittest.TestCase):
 
     def test_030(self):
         """ Model: Prop.column_chain returns a valid set """
-        self.assertEqual(self.testmodel._properties.column_chain, ['TestParentModel', 'test_model_name'])
+        self.assertEqual(self.testmodel._properties.column_chain, [
+                         'TestParentModel', 'test_model_name'])
 
     def test_040(self):
         """ Model: Prop.subquery is being set properly on subquery models """
@@ -130,7 +137,8 @@ class TestModel(unittest.TestCase):
         ).get(False)
 
         subquery = self.testmodel._additional_fields.get_alias('test_subquery')
-        self.assertEqual(subquery[0]._properties.subquery_parent, self.testmodel)
+        self.assertEqual(
+            subquery[0]._properties.subquery_parent, self.testmodel)
 
     def test_051(self):
         """ Model: Prop.subquery_parent assignment only allows Model types or None/False"""
@@ -166,8 +174,10 @@ class TestModel(unittest.TestCase):
 
     def test_060(self):
         """ Model: Prop.connection() returns a proper connection """
-        self.assertEqual(self.testmodel._properties.connection('read'), Connection.Test)
-        self.assertEqual(self.testmodel._properties.connection('write'), Connection.Test)
+        self.assertEqual(
+            self.testmodel._properties.connection('read'), Connection.Test)
+        self.assertEqual(
+            self.testmodel._properties.connection('write'), Connection.Test)
 
     def test_061(self):
         """ Model: Prop.connection(mode) sets the proper mode """

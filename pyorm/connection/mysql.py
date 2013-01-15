@@ -11,7 +11,6 @@ import re
 import traceback
 
 
-
 class mysqlConnection(object):
     @property
     def dialect(self):
@@ -225,32 +224,43 @@ class mysqlDialect(object):
             if token[0] is Token.Operator:
                 op = token[1]
                 if op in (',', 'RPARENTHESIS'):
-                    translated.append('{0} '.format(self.operators.get(op, op)))
+                    translated.append(
+                        '{0} '.format(self.operators.get(op, op)))
                 elif token[1] == 'LPARENTHESIS':
                     translated.append(self.operators.get(op, op))
                 elif op == 'EQ' and type(token_stream[index + 1][1]) in (tuple, list) or token_stream[index + 1][0] == Token.Model:
                     op = 'IN'
-                    translated.append(' {0} '.format(self.operators.get(op, op)))
+                    translated.append(
+                        ' {0} '.format(self.operators.get(op, op)))
                 elif op == 'NE' and type(token_stream[index + 1][1]) in (tuple, list) or token_stream[index + 1][0] == Token.Model:
                     op = 'NOT IN'
-                    translated.append(' {0} '.format(self.operators.get(op, op)))
+                    translated.append(
+                        ' {0} '.format(self.operators.get(op, op)))
                 elif op == 'CONTAINS':
                     op = 'LIKE'
-                    translated.append(' {0} '.format(self.operators.get(op, op)))
-                    token_stream[index + 1] = (Token.Literal, '%{0}%'.format(token_stream[index + 1][1]))
+                    translated.append(
+                        ' {0} '.format(self.operators.get(op, op)))
+                    token_stream[index + 1] = (Token.Literal, '%{0}%'.format(
+                        token_stream[index + 1][1]))
                 elif op == 'STARTSWITH':
                     op = 'LIKE'
-                    translated.append(' {0} '.format(self.operators.get(op, op)))
-                    token_stream[index + 1] = (Token.Literal, '{0}%'.format(token_stream[index + 1][1]))
+                    translated.append(
+                        ' {0} '.format(self.operators.get(op, op)))
+                    token_stream[index + 1] = (Token.Literal, '{0}%'.format(
+                        token_stream[index + 1][1]))
                 elif op == 'ENDSWITH':
                     op = 'LIKE'
-                    translated.append(' {0} '.format(self.operators.get(op, op)))
-                    token_stream[index + 1] = (Token.Literal, '%{0}'.format(token_stream[index + 1][1]))
+                    translated.append(
+                        ' {0} '.format(self.operators.get(op, op)))
+                    token_stream[index + 1] = (Token.Literal, '%{0}'.format(
+                        token_stream[index + 1][1]))
                 else:
-                    translated.append(' {0} '.format(self.operators.get(token[1], token[1])))
+                    translated.append(' {0} '.format(
+                        self.operators.get(token[1], token[1])))
             elif token[0] is Token.Literal:
                 if type(token[1]) in (tuple, list):
-                    translated.append('({0})'.format(','.join(['%s'] * len(token[1]))))
+                    translated.append(
+                        '({0})'.format(','.join(['%s'] * len(token[1]))))
                     values.extend(token[1])
                 else:
                     translated.append('%s')
@@ -258,12 +268,15 @@ class mysqlDialect(object):
             elif token[0] is Token.Alias:
                 translated.append(' AS `{0}`'.format(token[1]))
             elif token[0] is Token.Column:
-                translated.append(self.format_column(token[1], ref_model=ref_model))
+                translated.append(
+                    self.format_column(token[1], ref_model=ref_model))
             elif token[0] is Token.Keyword:
                 if token[1].upper() not in ('UNION', 'ORDER', 'SEPARATOR'):
-                    translated.append(' {0}'.format(self.keywords.get(token[1].upper(), token[1].upper())))
+                    translated.append(' {0}'.format(self.keywords.get(
+                        token[1].upper(), token[1].upper())))
                 else:
-                    translated.append(' {0} '.format(self.keywords.get(token[1].upper(), token[1].upper())))
+                    translated.append(' {0} '.format(self.keywords.get(
+                        token[1].upper(), token[1].upper())))
             elif token[0] is Token.Model:
                 try:
                     token[1]._properties.subquery_parent = self._model
@@ -294,9 +307,11 @@ class mysqlDialect(object):
         for name in model.Fields._field_list:
             field = getattr(model.Fields, name)
             try:
-                field_def, field_def_literals = self.translate(field.tokenize())
+                field_def, field_def_literals = self.translate(
+                    field.tokenize())
             except AttributeError:
-                field_def, field_def_literals = (self.fields.get(field.field_type, field.field_type), [])
+                field_def, field_def_literals = (
+                    self.fields.get(field.field_type, field.field_type), [])
 
             sql = '`{0}` {1}'.format(name, field_def)
             literals.extend(field_def_literals)
@@ -314,7 +329,7 @@ class mysqlDialect(object):
             if not getattr(field, 'null', False):
                 sql += ' NOT NULL'
             elif field_def == 'TIMESTAMP':
-                # NULL is treated a bit different for timestamp fields.  
+                # NULL is treated a bit different for timestamp fields.
                 sql += ' NULL'
 
             if getattr(field, 'autoincrement', False):
@@ -322,7 +337,8 @@ class mysqlDialect(object):
             # The DEFAULT attribute does not apply to text or blob types
             elif field_def not in ('TINYTEXT', 'TEXT', 'MEDIUMTEXT', 'LONGTEXT', 'TINYBLOB', 'BLOB', 'MEDIUMBLOB', 'LONGBLOB', ) and getattr(field, 'default', False) is not False:
                 try:
-                    default, default_literals = self.translate(field.default.tokenize())
+                    default, default_literals = self.translate(
+                        field.default.tokenize())
                     sql += ' DEFAULT {0}'.format(default)
                     literals.extend(default_literals)
                 except AttributeError:
@@ -331,13 +347,13 @@ class mysqlDialect(object):
 
             if getattr(field, 'onupdate', None) is not None:
                 try:
-                    onupdate, onupdate_literals = self.translate(field.onupdate.tokenize())
+                    onupdate, onupdate_literals = self.translate(
+                        field.onupdate.tokenize())
                     sql += ' ON UPDATE {0}'.format(onupdate)
                     literals.extend(onupdate_literals)
                 except AttributeError:
                     sql += ' ON UPDATE %s'
                     literals.append(field.onupdate)
-
 
             fields.append(sql)
 
@@ -354,7 +370,8 @@ class mysqlDialect(object):
                 primary_key_fields.append(name)
 
         if len(primary_key_fields):
-            indexes.append(" PRIMARY KEY ({0})".format(', '.join('`{0}`'.format(field) for field in primary_key_fields)))
+            indexes.append(" PRIMARY KEY ({0})".format(', '.join(
+                '`{0}`'.format(field) for field in primary_key_fields)))
 
         for name in model.Indexes._index_list:
             index = getattr(model.Indexes, name)
@@ -362,16 +379,17 @@ class mysqlDialect(object):
             if issubclass(type(index), UniqueIndex):
                 indexes.append(" UNIQUE INDEX `{0}` ({1})".format(name, ', '.join('`{0}`'.format(field) for field in index._fields)))
             elif issubclass(type(index), PrimaryKey):
-                indexes.append(" PRIMARY KEY ({1})".format(name, ', '.join('`{0}`'.format(field) for field in index._fields)))
+                indexes.append(" PRIMARY KEY ({1})".format(name, ', '.join(
+                    '`{0}`'.format(field) for field in index._fields)))
             elif issubclass(type(index), FullTextIndex):
                 indexes.append(" FULLTEXT INDEX `{0}` ({1})".format(name, ', '.join('`{0}`'.format(field) for field in index._fields)))
             elif issubclass(type(index), SpatialIndex):
                 indexes.append(" SPATIAL INDEX `{0}` ({1})".format(name, ', '.join('`{0}`'.format(field) for field in index._fields)))
             else:
-                indexes.append(" INDEX `{0}` ({1})".format(name, ', '.join('`{0}`'.format(field) for field in index._fields)))
+                indexes.append(" INDEX `{0}` ({1})".format(name, ', '.join(
+                    '`{0}`'.format(field) for field in index._fields)))
 
         return ', '.join(indexes)
-
 
     def select(self, model):
         """
@@ -439,9 +457,11 @@ class mysqlDialect(object):
         literals.extend(values)
 
         if len(filter(lambda x: x[0] is Token.Keyword and x[1] == 'Values', tokens)):
-            sql = u'INSERT INTO {0} {1}'.format(self.format_table(model, False), trans)
+            sql = u'INSERT INTO {0} {1}'.format(
+                self.format_table(model, False), trans)
         else:
-            sql = u'INSERT INTO {0} SET {1}'.format(self.format_table(model, False), trans)
+            sql = u'INSERT INTO {0} SET {1}'.format(
+                self.format_table(model, False), trans)
 
         return sql, literals
 
@@ -455,7 +475,8 @@ class mysqlDialect(object):
         literals = []
         trans, values = self.translate(model._standard_fields.tokenize())
         literals.extend(values)
-        sql = u'UPDATE {0} SET {1}'.format(self.format_table(model, False), trans)
+        sql = u'UPDATE {0} SET {1}'.format(
+            self.format_table(model, False), trans)
 
         if len(model._filter):
             trans, values = self.translate(model._filter.tokenize())
@@ -496,9 +517,11 @@ class mysqlDialect(object):
         literals.extend(values)
 
         if len(filter(lambda x: x[0] is Token.Keyword and x[1] == 'Values', tokens)):
-            sql = u'REPLACE INTO {0} {1}'.format(self.format_table(model, False), trans)
+            sql = u'REPLACE INTO {0} {1}'.format(
+                self.format_table(model, False), trans)
         else:
-            sql = u'REPLACE INTO {0} SET {1}'.format(self.format_table(model, False), trans)
+            sql = u'REPLACE INTO {0} SET {1}'.format(
+                self.format_table(model, False), trans)
 
         return sql, literals
 
@@ -562,7 +585,8 @@ class mysqlDialect(object):
                     escaped_values.extend(values)
 
                     if len(load_list[rel]):
-                        vals = self.format_joins(getattr(model.Relationships, rel)._model, load_list[rel])
+                        vals = self.format_joins(getattr(
+                            model.Relationships, rel)._model, load_list[rel])
                         joins.append(vals[0])
                         escaped_values.extend(vals[1])
 
@@ -605,13 +629,15 @@ class mysqlDialect(object):
                     if ref_model is not False:
                         column_base.extend(ref_model._properties.column_chain)
                     else:
-                        column_base.extend(self._model._properties.column_chain)
+                        column_base.extend(
+                            self._model._properties.column_chain)
                 elif column._scope:
                     # process subquery field that is set to the parent scope
                     column_base.extend(self._model._properties.subquery_parent._properties.column_chain)
 
                 column_base.extend(column._queue)
-                col = u'`{0}`.`{1}`'.format(u'.'.join(column_base[:-1]), column_base[-1])
+                col = u'`{0}`.`{1}`'.format(
+                    u'.'.join(column_base[:-1]), column_base[-1])
 
                 if column._alias is not None and mode == 'read':
                     col = u'{0} AS `{1}`'.format(col, u'.'.join(column_base))
@@ -619,4 +645,3 @@ class mysqlDialect(object):
             return col
         except AttributeError:
             return u'`{0}`'.format(u'.'.join(column._queue))
-
