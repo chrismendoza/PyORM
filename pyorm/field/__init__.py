@@ -7,6 +7,7 @@ import time
 
 from pyorm.exceptions import IntegerConversionError, DatabaseColumnTypeMismatchError
 from pyorm.expression import Expression
+from pyorm.token import Token
 
 
 class Field(object):
@@ -155,6 +156,10 @@ class Time(Field):
 
 class TimeStamp(Field):
     field_type = 'TIMESTAMP'
+    def __init__(self, **kwargs):
+        self.onupdate = kwargs.pop('onupdate', None)
+        Field.__init__(self, **kwargs)
+
     def to_db(self, value):
         if value is None:
             return u'0000-00-00 00:00:00'
@@ -185,7 +190,13 @@ class LongBlob(Field):
     field_type = 'LONGBLOB'
 
 
-class VarBinary(Field):
+class Binary(Field):
+    field_type = 'BINARY'
+    def __init__(self, length=None, **kwargs):
+        Field.__init__(self, **kwargs)
+        self.length = length
+
+class VarBinary(Binary):
     field_type = 'VARBINARY'
 
 
@@ -195,6 +206,7 @@ class Enum(Field):
     def __init__(self, *values, **kwargs):
         Field.__init__(self, **kwargs)
         self.values = Expression(*values).operator(',')
+        self.values._force_enclose = True
 
     def tokenize(self):
         tokens = [(Token.Keyword, self.__class__.__name__)]
@@ -202,7 +214,11 @@ class Enum(Field):
         return tokens
 
 
-class Pickle(Text):
+class Pickle(Field):
+    def __init__(self, **kwargs):
+        self.field_type = kwargs.pop('field_type', 'Text').upper()
+        Field.__init__(self, **kwargs)
+
     def to_python(self, value):
         if value in ('', u'', None):
             return None

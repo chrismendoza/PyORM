@@ -1,7 +1,7 @@
 from pyorm.connection import exceptions
 from pyorm.expression import Expression
 from pyorm.field import Field
-from pyorm.index import Index, UniqueIndex, FullTextIndex, SpatialIndex
+from pyorm.index import Index, PrimaryKey, UniqueIndex, FullTextIndex, SpatialIndex
 from pyorm.relationship import ThinRelationship
 from pyorm.relationship import Relationship
 
@@ -280,11 +280,11 @@ class mysqlDialect(object):
 
     def create_table(self, model):
         fields, literals = self.format_fields(model)
-        sql = "CREATE TABLE IF NOT EXISTS {0} ({1})".format(self.format_table(model, False), ','.join((fields, self.format_indexes(model))))
+        sql = "CREATE TABLE IF NOT EXISTS {0} ({1})".format(self.format_table(model, False), ','.join(filter(bool, (fields, self.format_indexes(model)))))
         sql += ' ENGINE={0}'.format(getattr(model.Meta, 'engine', 'MYISAM'))
 
         if getattr(model.Meta, 'charset', False):
-            sql += ' DEFAULT CHARSET {0}'.format(model.Meta.charset)
+            sql += ' DEFAULT CHARSET={0}'.format(model.Meta.charset)
 
         return sql, literals
 
@@ -313,10 +313,14 @@ class mysqlDialect(object):
 
             if not getattr(field, 'null', False):
                 sql += ' NOT NULL'
+            elif field_def == 'TIMESTAMP':
+                # NULL is treated a bit different for timestamp fields.  
+                sql += ' NULL'
 
             if getattr(field, 'autoincrement', False):
                 sql += ' AUTO_INCREMENT'
-            elif getattr(field, 'default', False) is not False:
+            # The DEFAULT attribute does not apply to text or blob types
+            elif field_def not in ('TINYTEXT', 'TEXT', 'MEDIUMTEXT', 'LONGTEXT', 'TINYBLOB', 'BLOB', 'MEDIUMBLOB', 'LONGBLOB', ) and getattr(field, 'default', False) is not False:
                 try:
                     default, default_literals = self.translate(field.default.tokenize())
                     sql += ' DEFAULT {0}'.format(default)
@@ -324,6 +328,16 @@ class mysqlDialect(object):
                 except AttributeError:
                     sql += ' DEFAULT %s'
                     literals.append(field.default)
+
+            if getattr(field, 'onupdate', None) is not None:
+                try:
+                    onupdate, onupdate_literals = self.translate(field.onupdate.tokenize())
+                    sql += ' ON UPDATE {0}'.format(onupdate)
+                    literals.extend(onupdate_literals)
+                except AttributeError:
+                    sql += ' ON UPDATE %s'
+                    literals.append(field.onupdate)
+
 
             fields.append(sql)
 
@@ -344,8 +358,11 @@ class mysqlDialect(object):
 
         for name in model.Indexes._index_list:
             index = getattr(model.Indexes, name)
+
             if issubclass(type(index), UniqueIndex):
                 indexes.append(" UNIQUE INDEX `{0}` ({1})".format(name, ', '.join('`{0}`'.format(field) for field in index._fields)))
+            elif issubclass(type(index), PrimaryKey):
+                indexes.append(" PRIMARY KEY ({1})".format(name, ', '.join('`{0}`'.format(field) for field in index._fields)))
             elif issubclass(type(index), FullTextIndex):
                 indexes.append(" FULLTEXT INDEX `{0}` ({1})".format(name, ', '.join('`{0}`'.format(field) for field in index._fields)))
             elif issubclass(type(index), SpatialIndex):

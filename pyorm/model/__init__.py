@@ -37,6 +37,7 @@ class Model(ThinModel):
         """ Set up the Model object instance """
         ThinModel.__init__(self, *args, **kwargs)
         self._debug_object = False
+        self._affected_rows = 0
         self.reset()
 
     def __copy__(self):
@@ -291,7 +292,7 @@ class Model(ThinModel):
                         base.Relationships._thin_relationship_list.append(rel)
                         base = getattr(base.Relationships, rel)
                 else:
-                    raise RelationshipChainError('.'.join(column_chain._queue[:-1]), self.__class__.__name__)
+                    raise RelationshipChainError('.'.join(column._queue[:-1]), self.__class__.__name__)
             else:
                 base = getattr(base.Relationships, rel).model
 
@@ -424,6 +425,7 @@ class Model(ThinModel):
         self._operation_successful = False
         try:
             result = conn.query(sql, values)
+            self._affected_rows = result.get('count', 0)
             self._debug_object = result.get('debug_object', False)
             if result is not False:
                 self._operation_successful = True
@@ -601,8 +603,15 @@ class Model(ThinModel):
                     self._standard_fields.append(new_col)
 
         elif len(self._old_values):
+            # If there were unique columns defined on the model, use those as the fields to match
+            # against, since they are always pulled back.  Otherwise, we depend on all the fields
+            # being available, (in order to be on the cautious side of things).
+            field_set = self.Indexes._unique_columns
+            if not len(field_set):
+                field_set = self.Fields._field_list
+
             for name in self.Fields._field_list:
-                 if (self._old_values[name] != self._values[name]) or \
+                 if (name in self._old_values.keys() and self._old_values[name] != self._values[name]) or \
                  (name in self._values.keys() and name not in self._old_values.keys()):
                     # set any values that have changed into the new standard fields expression, so they
                     # can be properly changed in the database.
@@ -618,8 +627,9 @@ class Model(ThinModel):
             self._filter = Expression().enclose(False)
             for k in self._old_values.keys():
                 # set the original record values as the filters to be matched when we update
-                if k in self.Fields._field_list:
+                if k in field_set:
                     self._filter.append(Column(False, k) == self._old_values[k])
+
         elif self._old_values.keys() != self._values.keys():
             diffkeys = set(self._values.keys()) - set(self._old_values.keys())
             raise ColumnNotInResultError(diffkeys[0], self.__class__.__name__)
@@ -640,9 +650,16 @@ class Model(ThinModel):
         else:
             self._filter = Expression().enclose(False)
 
+            # If there were unique columns defined on the model, use those as the fields to match
+            # against, since they are always pulled back.  Otherwise, we depend on all the fields
+            # being available, (in order to be on the cautious side of things).
+            field_set = self.Indexes._unique_columns
+            if not len(field_set):
+                field_set = self.Fields._field_list
+
             for k in self._old_values.keys():
                 # set the original record values as the filters to be matched when we update
-                if k in self.Fields._field_list:
+                if k in field_set:
                     self._filter.append(Column(False, k) == self._old_values[k])
 
     def get(self, run_query=True):
@@ -816,18 +833,25 @@ class Model(ThinModel):
                     self._recordindex = 0
         return success
 
-    def update(self, run_query=True, **kwargs):
+    def update(self, run_query=True, return_affected_rows=False, **kwargs):
         """
             Run an update, based on the record currently in the model.  If the user explicitly calls this
             and there is not a record loaded, raises an exception.
+
+            Normally returns whether or not the operation was successful.  However, if
+            `return_affected_rows` is specified, a tuple consisting of (operation_successful, affected_rows)
+            is returned.
         """
         if self._prepare_update(**kwargs):
             self._prepare_expressions()
-            conn = self._properties.connection('write')
+            affected_rows = 0
 
+            conn = self._properties.connection('write')
             decoded = conn.dialect.update(self)
 
             if run_query and self._query(conn, *decoded) is not False:
+                affected_rows = self._affected_rows
+
                 if len(kwargs.keys()):
                     self.reset()
                 else:
@@ -837,7 +861,10 @@ class Model(ThinModel):
                 self._properties.escaped_values = decoded[1]
                 return decoded[0]
 
-        return self._operation_successful
+        if return_affected_rows:
+            return (self._operation_successful, affected_rows)
+        else:
+            return self._operation_successful
 
     def delete(self):
         """
@@ -939,6 +966,7 @@ class Model(ThinModel):
         self._add_unique_fields = True
         self._operation_successful = False
         self._limit = None
+        self._affected_rows = 0
 
         # Since relationships are unique to the model instance, we set them as instance vars here
         self.Relationships = type('Relationships', (object,), {})()

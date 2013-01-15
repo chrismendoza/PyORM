@@ -4,7 +4,7 @@ import warnings
 
 from pyorm.exceptions import FieldsUndefinedError, DeclarationIndexMissingError, InvalidDefaultError
 from pyorm.field import Field
-from pyorm.index import Index, UniqueIndex
+from pyorm.index import Index, PrimaryKey, UniqueIndex
 from pyorm.relationship import Relationship
 
 class MetaModel(type):
@@ -55,7 +55,8 @@ class MetaModel(type):
         for field_name, field, dindex in field_objects:
             # raise an error here if we encounter a model field that has a default of null (None in python) and
             # does not allow nulls.  The only exception to this rule is autoincrement fields.
-            if not field.null and field.default is None and not field.autoincrement:
+            # TODO: This warning should be moved to the dialect
+            if not field.null and field.default is None and not field.autoincrement and not field.field_type in ('TINYTEXT', 'TEXT', 'MEDIUMTEXT', 'LONGTEXT', 'TINYBLOB', 'BLOB', 'MEDIUMBLOB', 'LONGBLOB', ):
                 #raise InvalidDefaultError(name, field_name, 'Field set to not allow nulls, but null specified as the default value')
                 warnings.warn('Field `{0}`.`{1}` is set to not allow nulls, but has a default value of None (null).'.format(name, field_name))
             field.name = field_name
@@ -86,9 +87,14 @@ class MetaModel(type):
                 index_list = []
                 index_objects = cls.sorted_object_matches(new_class.Indexes, Index)
 
+                primary_key_on_fields = bool(len(unique_fields))
+
                 for index_name, index, dindex in index_objects:
                     index_list.append(index_name)
-                    if type(index) is UniqueIndex:
+                    if type(index) in (UniqueIndex, PrimaryKey):
+                        if type(index) is PrimaryKey and primary_key_on_fields:
+                            raise Exception("primary_key attribute set on fields, but Primary"
+                                            " key defined via Indexes")
                         unique_fields.extend(index._fields)
 
                 new_class.Indexes._index_list = tuple(index_list)

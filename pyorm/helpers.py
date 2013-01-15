@@ -253,6 +253,9 @@ class Coalesce(Helper):
 class IfNull(Helper):
     pass
 
+class NullIf(Helper):
+    pass
+
 class Unix_Timestamp(Helper):
     pass
 
@@ -263,4 +266,7 @@ class Now(Helper):
     pass
 
 class CurrentTimestamp(Helper):
+    pass
+
+class Rand(Helper):
     pass
