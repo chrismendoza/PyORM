@@ -1,4 +1,5 @@
 import copy
+import collections
 import functools
 import weakref
 
@@ -6,6 +7,9 @@ from pyorm.indexes import MetaIndexes
 from pyorm.meta import Meta
 from pyorm.expression import Expression
 from pyorm.token import *
+
+
+Mapping = collections.namedtuple('Mapping', ('function', 'key_map'))
 
 
 def clones(func):
@@ -154,6 +158,7 @@ class MetaModel(type):
         instance._having = Expression(op=OP_AND)
         instance._group = Expression(op=OP_COMMA)
         instance._joined_tables = []
+        instance._mapping = None
 
         instance.__init__(*args, **kwargs)
 
@@ -178,7 +183,7 @@ class Model(object):
             Also triggers a .get() to be run when a field or relationship
             is accessed but no result has been returned yet.
         """
-        if self._result_loaded == False:
+        if not self._result_loaded:
             self.get()
 
         if hasattr(self.c, attr):
@@ -205,6 +210,21 @@ class Model(object):
             raise Exception('Cannot override relationship with another value')
         else:
             object.__setattr__(self, attr, val)
+
+    def __iter__(self):
+        """
+            If no records have been pulled back, attempt to pull them back using
+            the supplied filters (if any).  If a mapping is available, this will
+            return each row using the mapped object.
+        """
+        if not self._result_loaded:
+            self.get()
+
+        for idx, row in enumerate(self._result):
+            if self._map is not None:
+                yield self._map.function()
+            else:
+                yield RecordProxy(model=self, location=idx)
 
     @clones
     def fields(self, *fields, **compound_fields):
@@ -303,7 +323,20 @@ class Model(object):
             This could be used to make the model return a set of User objects or other
             complex constructs.
         """
-        pass
+        def compile(arg):
+            if hasattr(arg, '_path'):
+                # This compiles the column path to a partial which can be run on
+                # iteration, that way there is no issue with accessing values prior to
+                # a Model.get() being performed.
+                return functools.partial(functools.reduce, getattr, arg._path, self)
+            else:
+                return arg
+
+        args = {key: compile(arg) for key, arg in args.items()}
+        self._map = (func, args)
+
+    def reset_map(self):
+        self._map = None
 
     def insert(self, ignore=False, *rows, **fields):
         """
