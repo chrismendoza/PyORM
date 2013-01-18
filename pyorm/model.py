@@ -265,6 +265,12 @@ class Model(object):
     def join(self, label=None, model=None, join_type=None, filters=None):
         pass
 
+    def scalar(self):
+        """
+            Returns the first value of the first row based on the filters assigned.
+        """
+        pass
+
     def one(self):
         """
             Returns a single row based on the filters assigned
@@ -280,6 +286,22 @@ class Model(object):
     def all(self):
         """
             Returns all results for the table, regardless of the filters assigned
+        """
+        pass
+
+    def map(self, func, args):
+        """
+            Allows the user to return a set of a results using the mapping provided
+
+            Example:
+                Model.map(dict, {'test1': C.field1, 'test2': C.relationship.field2})
+
+            would cause iteration over the model to return a dict with the key 'test1'
+            being the equivalent of Model.field1, and 'test2' being the equivalent of
+            Model.relationship.field2.
+
+            This could be used to make the model return a set of User objects or other
+            complex constructs.
         """
         pass
 
