@@ -107,8 +107,6 @@ class Expression(object):
             else:
                 tokens.append(token)
 
-        # if self.op in (OP_MUL, OP_DIV, OP_MOD, OP_POW, OP_ADD, OP_SUB,
-        # OP_OR, OP_AND):
         tokens.insert(0, Token(T_OPR, OP_OPAR))
         tokens.append(Token(T_OPR, OP_CPAR))
 

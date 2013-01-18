@@ -150,6 +150,12 @@ class MetaModel(type):
 
         instance._fields = Expression(op=OP_COMMA)
         instance._compound_fields = Expression(op=OP_COMMA)
+        instance._filters = Expression(op=OP_AND)
+        instance._order = Expression(op=OP_COMMA)
+        instance._having = Expression(op=OP_AND)
+        instance._group = Expression(op=OP_COMMA)
+        instance._joined_tables = []
+
         instance.__init__(*args, **kwargs)
 
         return instance
@@ -188,5 +194,40 @@ class Model(object):
     @clones
     def filters(self, *args):
         for arg in args:
-            pass
+            for token in arg.tokens:
+                if token.type == T_COL:
+                    pass
 
+    @clones
+    def order(self, *args):
+        pass
+
+    @clones
+    def having(self, *args):
+        pass
+
+    @clones
+    def group(self, *args):
+        pass
+
+    @clones
+    def join(self, label=None, model=None, join_type=None, filters=None):
+        pass
+
+    def get(self):
+        pass
+
+    def all(self):
+        pass
+
+    def insert(self):
+        pass
+
+    def update(self):
+        pass
+
+    def replace(self):
+        pass
+
+    def delete(self):
+        pass
