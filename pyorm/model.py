@@ -84,7 +84,6 @@ class MetaModel(type):
             derived from Meta.
         """
         instance = cls.__new__(cls)
-        #instance.objects = Manager(model=instance)
 
         # Assigns a parent model to a given object.  This should only be used
         # when creating a new model for a relationship, and as such is prefixed
@@ -119,8 +118,8 @@ class MetaModel(type):
 
             # Place the bound version on the instance as a replacement for the
             # unbound version that exists on the class.
-            setattr(instance, name,
-                    getattr(cls, name).bind(name=trans_name, owner=instance))
+            getattr(cls, name).bind(name=name, trans_name=trans_name,
+                                    owner=instance))
 
         # Instantiate the indexes class so that any methods defined on it
         # will work properly (including properties)
@@ -170,18 +169,70 @@ class Model(object):
     def __deepcopy__(self):
         pass
 
+    def __getattr__(self, attr):
+        """
+            Ease of use functionality:
+                Maps Model.field -> Model.c.field.value
+                Maps Model.relationship -> Model.r.relationship.model
+
+            Also triggers a .get() to be run when a field or relationship
+            is accessed but no result has been returned yet.
+        """
+        if self._result_loaded == False:
+            self.get()
+
+        if hasattr(self.c, attr):
+            return getattr(self.c, attr).value
+        elif hasattr(self.r, attr):
+            return getattr(self.r, attr).model
+
+
+    def __setattr__(self, attr, val):
+        """
+            Allows the model to have it's bindings (fields, relationships)
+            to be added to on the fly.  Useful for adding extra relationships
+            after the model has been instantiated.
+
+            This also prevents previously defined relationships from being
+            overwritten.  If you need to modify a relationship on the fly, they
+            can be accessed via Model.r.rel_name.
+        """
+        if hasattr(val, 'bind'):
+            pass
+        elif hasattr(self.c, attr):
+            getattr(self.c, attr).value = val
+        elif hasattr(self.r, attr):
+            raise Exception('Cannot override relationship with another value')
+        else:
+            object.__setattr__(self, attr, val)
+
     @clones
-    def fields(self, *args, **kwargs):
+    def fields(self, *fields, **compound_fields):
+        """
+            Add the fields in args and kwargs to the list of columns to be
+            returned by the query.  If this method is invoked, only those fields
+            which are requested will be accessible via the model and it's pulled
+            relationships.
+
+            The primary and unique fields for the primary model and any joined
+            relationships are all automatically requested as well, so that any
+            row requested can be updated.
+
+            This is an optimization method, used primarily to reduce the amount
+            of data transferred for queries with large data sets, where not all
+            rows are necessary.  It also allows the user to push some of the
+            calculations to the database server when it is quicker to 
+        """
         # TODO: Build out field creation objects (CharField, IntField, etc.)
         # we compute the hashes of the already selected fields, so that we only
         # pull back a single instance of the data.  This prevents us from using
         # more bandwidth than necessary.
-        hashed_fields = [hash(field) for field in fields]
-        for arg in args:
+        hashed_fields = [hash(field) for field in self._fields]
+        for field in fields:
             if hash(arg) not in hashed_fields:
                 self._fields.append(arg)
 
-        for key, val in kwargs.items():
+        for key, val in compound_fields.items():
             # If the user redefines an already existing key here, and the
             # they could overwrite their original expression.  Since this
             # could be the intended behavior, we make no assumption on which
@@ -214,19 +265,55 @@ class Model(object):
     def join(self, label=None, model=None, join_type=None, filters=None):
         pass
 
+    def one(self):
+        """
+            Returns a single row based on the filters assigned
+        """
+        pass
+
     def get(self):
+        """
+            Returns all results based on the filters assigned
+        """
         pass
 
     def all(self):
+        """
+            Returns all results for the table, regardless of the filters assigned
+        """
         pass
 
-    def insert(self):
+    def insert(self, ignore=False, *rows, **fields):
+        """
+            Model.insert can be used one of three ways:
+                Using the data already set on the fields of Model:
+                    Model.insert()
+
+                Using the rows passed to insert multiple rows at once:
+                    Model.insert({'field1': data1, 'field2': data2},
+                                 {'field1': data3, 'field2': data4})
+
+                Using the fields passed as keyword args to quickly insert data:
+                    Model.insert(field1=data1, field2=data2, field3=data3)
+        """
+        pass
+
+    def replace(self, *rows, **fields):
+        """
+            Model.replace can be used one of three ways:
+                Using the data already set on the fields of Model:
+                    Model.replace()
+
+                Using the rows passed to replace multiple rows at once:
+                    Model.replace({'field1': data1, 'field2': data2},
+                                 {'field1': data3, 'field2': data4})
+
+                Using the fields passed as keyword args to quickly replace data:
+                    Model.replace(field1=data1, field2=data2, field3=data3)
+        """
         pass
 
     def update(self):
-        pass
-
-    def replace(self):
         pass
 
     def delete(self):
