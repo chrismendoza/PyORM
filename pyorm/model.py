@@ -333,7 +333,7 @@ class Model(object):
                 return arg
 
         args = {key: compile(arg) for key, arg in args.items()}
-        self._map = (func, args)
+        self._map = Mapping(func, args)
 
     def reset_map(self):
         self._map = None
