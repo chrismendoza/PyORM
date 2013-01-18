@@ -293,7 +293,9 @@ class mysqlDialect(object):
 
     def create_table(self, model):
         fields, literals = self.format_fields(model)
-        sql = "CREATE TABLE IF NOT EXISTS {0} ({1})".format(self.format_table(model, False), ','.join(filter(bool, (fields, self.format_indexes(model)))))
+        temporary = 'TEMPORARY ' if getattr(model.Meta, 'temporary', False) else ''
+        sql = "CREATE {0}TABLE IF NOT EXISTS {1} ({2})".format(temporary, self.format_table(model, False),
+                                                               ','.join(filter(bool, (fields, self.format_indexes(model)))))
         sql += ' ENGINE={0}'.format(getattr(model.Meta, 'engine', 'MYISAM'))
 
         if getattr(model.Meta, 'charset', False):
@@ -564,7 +566,7 @@ class mysqlDialect(object):
                         )
                     tables.append(table_string)
 
-        return u','.join(tables)
+        return u' INNER JOIN '.join(tables)
 
     def format_joins(self, model, load_list=False, include_alias=True):
         joins = []

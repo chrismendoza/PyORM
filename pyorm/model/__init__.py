@@ -1007,7 +1007,7 @@ class Model(ThinModel):
         # values the user changes after initialization gets preserved.
         if id(self.Meta.__dict__) == id(self.__class__.Meta.__dict__):
             self.Meta = type('Meta', (object,), {})()
-            for option in ('read_server', 'write_server', 'engine', 'charset', 'union', 'table'):
+            for option in ('read_server', 'write_server', 'engine', 'charset', 'union', 'table', 'temporary'):
                 if hasattr(type(self).Meta, option):
                     setattr(self.Meta, option,
                             copy.copy(getattr(type(self).Meta, option)))
