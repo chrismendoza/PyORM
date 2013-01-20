@@ -29,6 +29,21 @@ def clones(func):
         return new_instance
 
 
+def result_loaded(func):
+    """
+        Mark that the object has made an attempt in the past to load a result set.
+    """
+    @functools.wraps(func):
+    def wrapper(instance, *args, **kwargs):
+        result = func(instance, *args, **kwargs)
+        instance.result_loaded = True
+        return result
+
+
+class Container(object):
+    pass
+
+
 class MetaModel(type):
     def __new__(cls, name, bases, attrs):
         """
@@ -88,6 +103,8 @@ class MetaModel(type):
             derived from Meta.
         """
         instance = cls.__new__(cls)
+        instance.c = Container()
+        instance.r = Container()
 
         # Assigns a parent model to a given object.  This should only be used
         # when creating a new model for a relationship, and as such is prefixed
@@ -183,12 +200,15 @@ class Model(object):
             Also triggers a .get() to be run when a field or relationship
             is accessed but no result has been returned yet.
         """
-        if not self._result_loaded:
-            self.get()
-
         if hasattr(self.c, attr):
+            if not self._result_loaded:
+                self.get()
+
             return getattr(self.c, attr).value
         elif hasattr(self.r, attr):
+            if not self._result_loaded:
+                self.get()
+
             return getattr(self.r, attr).model
 
 
@@ -285,24 +305,28 @@ class Model(object):
     def join(self, label=None, model=None, join_type=None, filters=None):
         pass
 
+    @result_loaded
     def scalar(self):
         """
             Returns the first value of the first row based on the filters assigned.
         """
         pass
 
+    @result_loaded
     def one(self):
         """
             Returns a single row based on the filters assigned
         """
         pass
 
+    @result_loaded
     def get(self):
         """
             Returns all results based on the filters assigned
         """
         pass
 
+    @result_loaded
     def all(self):
         """
             Returns all results for the table, regardless of the filters assigned
@@ -328,7 +352,7 @@ class Model(object):
                 # This compiles the column path to a partial which can be run on
                 # iteration, that way there is no issue with accessing values prior to
                 # a Model.get() being performed.
-                return functools.partial(functools.reduce, getattr, arg._path, self)
+                return functools.partial(functools.reduce, (getattr, arg._path, self))
             else:
                 return arg
 
