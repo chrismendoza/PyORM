@@ -43,9 +43,9 @@ class RecordProxy(object):
         self._cloned = False
 
     def __getattr__(self, attr):
-        if not self._cloned and self.idx != self.model.current_idx:
+        if not self._cloned and self.idx != self.model._current_idx:
             self.model = self.model._clone()
-            self.model.current_idx = self.idx
+            self.model._current_idx = self.idx
             self._cloned = True
         return getattr(self.model, attr)
 
@@ -223,6 +223,22 @@ class MetaModel(type):
 class Model(object):
     __metaclass__ = MetaModel
 
+    @property
+    def _current_idx(self):
+        pass
+
+    @_current_idx.setter
+    def _current_idx(self, idx):
+        pass
+
+    @property
+    def _result_loaded(self):
+        pass
+
+    @_result_loaded.setter
+    def _result_loaded(self, val):
+        pass
+
     def __copy__(self):
         pass
 
@@ -237,6 +253,12 @@ class Model(object):
 
             Also triggers a .get() to be run when a field or relationship
             is accessed but no result has been returned yet.
+
+            NOTE: This functionality is only used in cases where a descriptor
+                  has not been added to the base class when initially parsing
+                  the fields/relationships (Fields or relationships added
+                  after the class was created, always occurs with compound
+                  fields, as we never want to add those to the base class object).
         """
         if hasattr(self.c, attr):
             if not self._result_loaded:
@@ -259,6 +281,11 @@ class Model(object):
             This also prevents previously defined relationships from being
             overwritten.  If you need to modify a relationship on the fly, they
             can be accessed via Model.r.rel_name.
+
+            NOTE: This functionality is only used in cases where a descriptor
+                  has not been added to the base class when initially parsing
+                  the fields/relationships (Fields or relationships added
+                  after the class was created).
         """
         if hasattr(val, 'bind'):
             pass
