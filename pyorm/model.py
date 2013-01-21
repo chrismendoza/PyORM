@@ -12,6 +12,44 @@ from pyorm.token import *
 Mapping = collections.namedtuple('Mapping', ('function', 'key_map'))
 
 
+class RecordProxy(object):
+    """
+        The RecordProxy object is used as a simple wrapper around a model,
+        which stores the current iteration index and the model it came from.
+
+        Each time an attribute is accessed on RecordProxy, that attribute
+        lookup is passed through to the model, but before doing so, RecordProxy
+        checks to see if:
+        a) has the model has already been cloned?
+        b) if it hasn't, is the index on the model different from the index in
+           the record?
+
+        If case `b` is true, RecordProxy clones the model object, and sets the
+        index on the clone to that of it's internal index.
+
+        This keeps the processing time during iteration to a minimum in most
+        cases where the model is just being iterated over as a result set, but
+        allows the user to compare values from two different iteration points
+        in the same record set.
+
+        This can also be used to allow multiple iterations as multiple starting
+        points (hopefully a rare use case).
+    """
+    __slots__ = ('_model', '_idx', '_cloned')
+
+    def __init__(self, model, idx):
+        self._model = weakref.proxy(model)
+        self._idx = idx
+        self._cloned = False
+
+    def __getattr__(self, attr):
+        if not self._cloned and self.idx != self.model.current_idx:
+            self.model = self.model._clone()
+            self.model.current_idx = self.idx
+            self._cloned = True
+        return getattr(self.model, attr)
+
+
 def clones(func):
     """
         Creates a clone of the model the method was passed before actually
@@ -203,13 +241,13 @@ class Model(object):
         if hasattr(self.c, attr):
             if not self._result_loaded:
                 self.get()
-
             return getattr(self.c, attr).value
         elif hasattr(self.r, attr):
             if not self._result_loaded:
                 self.get()
-
             return getattr(self.r, attr).model
+        else:
+            raise AttributeError(attr)
 
 
     def __setattr__(self, attr, val):
@@ -241,10 +279,11 @@ class Model(object):
             self.get()
 
         for idx, row in enumerate(self._result):
+            self.current_idx = idx
             if self._map is not None:
-                yield self._map.function()
+                yield self._map.function(**map.args)
             else:
-                yield RecordProxy(model=self, location=idx)
+                yield RecordProxy(model=self, idx=idx)
 
     @clones
     def fields(self, *fields, **compound_fields):
@@ -280,7 +319,13 @@ class Model(object):
 
             # It should be noted that they cannot replace a column defined on
             # this table, and attempting to do so will throw an exception.
-            self._compound_fields[key] = val
+            if not (hasattr(self.c, key) or
+                    hasattr(self.r, key)) or issubclass(getattr(self.c, key), CompoundField):
+                if issubclass(val.__class__, Model):
+                    val.parent = self
+                setattr(self.c, key, CompoundField(name=key, expression=val))
+            else:
+                raise('Failed to add field `{0}` item already exists for this model.')
 
     @clones
     def filters(self, *args):
@@ -392,8 +437,8 @@ class Model(object):
         """
         pass
 
-    def update(self):
+    def update(self, cascade=False):
         pass
 
-    def delete(self):
+    def delete(self, cascade=False):
         pass
