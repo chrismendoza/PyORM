@@ -43,9 +43,9 @@ class RecordProxy(object):
         self._cloned = False
 
     def __getattr__(self, attr):
-        if not self._cloned and self.idx != self.model._current_idx:
+        if not self._cloned and self.idx != self.model.current_idx:
             self.model = self.model._clone()
-            self.model._current_idx = self.idx
+            self.model.current_idx = self.idx
             self._cloned = True
         return getattr(self.model, attr)
 
@@ -224,19 +224,27 @@ class Model(object):
     __metaclass__ = MetaModel
 
     @property
-    def _current_idx(self):
+    def owner(self):
         pass
 
-    @_current_idx.setter
-    def _current_idx(self, idx):
+    @owner.setter
+    def owner(self, val):
         pass
 
     @property
-    def _result_loaded(self):
+    def current_idx(self):
         pass
 
-    @_result_loaded.setter
-    def _result_loaded(self, val):
+    @current_idx.setter
+    def current_idx(self, idx):
+        pass
+
+    @property
+    def result_loaded(self):
+        pass
+
+    @result_loaded.setter
+    def result_loaded(self, val):
         pass
 
     def __copy__(self):
@@ -261,11 +269,11 @@ class Model(object):
                   fields, as we never want to add those to the base class object).
         """
         if hasattr(self.c, attr):
-            if not self._result_loaded:
+            if not self.result_loaded:
                 self.get()
             return getattr(self.c, attr).value
         elif hasattr(self.r, attr):
-            if not self._result_loaded:
+            if not self.result_loaded:
                 self.get()
             return getattr(self.r, attr).model
         else:
@@ -302,7 +310,7 @@ class Model(object):
             the supplied filters (if any).  If a mapping is available, this will
             return each row using the mapped object.
         """
-        if not self._result_loaded:
+        if not self.result_loaded:
             self.get()
 
         for idx, row in enumerate(self._result):
