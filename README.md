@@ -38,6 +38,60 @@ In the example above, `m.test_field` would now contain the product of `SampleMod
 ## Filtering
 ## Grouping
 ## Ordering
+## Selecting Data
+PyORM offers four different options for retrieving data from your database:
+```
+from pyorm import Column as C
+from examples import SampleModel
+
+
+m = SampleModel()
+m.filter(C.field1 == 'test')
+m.scalar()
+```
+`Model.scalar()` - Returns the first value from the first matching row in the database.
+```
+from pyorm import Column as C
+from examples import SampleModel
+
+
+m = SampleModel()
+m.filter(C.field1 == 'test')
+m.one()
+```
+`Model.one()` - Returns the first matching row from the database.
+```
+from pyorm import Column as C
+from examples import SampleModel
+
+
+m = SampleModel()
+m.filter(C.field1 == 'test')
+m.get()
+```
+`Model.get()` - Returns all rows which match the filters specified.
+```
+from examples import SampleModel
+
+
+m = SampleModel()
+m.all()
+```
+`Model.all()` - Returns all rows that belong to this model, ignores any filters set on the model.
+
+```
+from examples import SampleModel
+
+
+m = SampleModel()
+for row in m:
+  # Do something with the data here
+```
+Alternatively you can choose to just iterate over the model you are working with, in which case `Model.get()` or `Model.all()` are called depending on whether or not you have defined filters on your model.
+## Inserting Data
+## Updating Data
+## Deleting Data
+## Replacing Data
 # Advanced Concepts
 ## Helpers
 ## Subqueries
