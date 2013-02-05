@@ -44,8 +44,7 @@ class RecordProxy(object):
 
     def __getattr__(self, attr):
         if not self._cloned and self.idx != self.model.current_idx:
-            self.model = self.model._clone()
-            self.model.current_idx = self.idx
+            self.model = self.model._clone(idx=self.idx)
             self._cloned = True
         return getattr(self.model, attr)
 
@@ -59,10 +58,12 @@ def clones(func):
         This is done to preserve the state of models while iterating, as well as
         allowing the user to create a base model with some simple filters on it,
         then later create branches of that model based on the original.
+        
+        This decorator will always return a cloned instance of the original object.
     """
     @functools.wraps(func)
     def wrapper(instance, *args, **kwargs):
-        new_instance = instance.__class__()
+        new_instance = instance.clone()
         func(new_instance, *args, **kwargs)
         return new_instance
 
@@ -410,6 +411,20 @@ class Model(object):
     def all(self):
         """
             Returns all results for the table, regardless of the filters assigned
+        """
+        pass
+
+    def clone(self, idx=None):
+        """
+            Clones the original model object and returns the clone.  This is provided
+            as a separate function from __copy__ or __deepcopy__ because it needed to
+            be able to take an index when cloning from a recordproxy.  This will also
+            create a clone of any relationships that have been modified, so it is a
+            fairly expensive operation.
+            
+            If you have custom code that needs to be run when a model is cloned, feel
+            free to override this method, just make sure that Model.clone() is triggered
+            before carrying out your operations.
         """
         pass
 
