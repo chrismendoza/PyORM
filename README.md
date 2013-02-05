@@ -13,15 +13,23 @@ By default, PyORM will pull back any and all fields for the base model, as well 
 
 PyORM supports two types of fields, the first is a regular column selection, where you specify the fields you want from the model and any relationships it is attached to.  This can be achieved this way:
 ```python
+from pyorm import Column as C
+from examples import SampleModel
+
+
 m = SampleModel()
 m.fields(C.field1, C.rel1.field2)
 m.get()
 ```
-In the example above, we are selecting only `SampleModel.field1` and `SampleModel.rel1.field2`, however, it should be noted that in order to allow you to save data in the future, any PrimaryKey or UniqueKey fields that exist on the model will be pulled back as well, so that an update can be performed if necessary.
+In the example above, we are selecting only `SampleModel.field1` and `SampleModel.rel1.field2`, however, it should be noted that in order to allow you to save data in the future, any PrimaryKey or UniqueKey fields that exist on the model and any relationships marked to also be loaded (in this case the fields from `SampleModel.rel1`) will be pulled back as well, so that an update can be performed if necessary.
 
 PyORM also supports returning a SQL expression as a column using keyword arguments, as long as that column name does not conflict with any of the real field names on the model, or the methods that are native to the model class.
 
 ```python
+from pyorm import Column as C
+from examples import SampleModel
+
+
 m = SampleModel()
 m.fields(test_field=(C.field1 * C.rel1.field2))
 m.get()
