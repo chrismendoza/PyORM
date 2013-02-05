@@ -67,11 +67,11 @@ def clones(func):
         return new_instance
 
 
-def result_loaded(func):
+def results_loaded(func):
     """
         Mark that the object has made an attempt in the past to load a result set.
     """
-    @functools.wraps(func):
+    @functools.wraps(func)
     def wrapper(instance, *args, **kwargs):
         result = func(instance, *args, **kwargs)
         instance.result_loaded = True
@@ -178,7 +178,7 @@ class MetaModel(type):
             # Place the bound version on the instance as a replacement for the
             # unbound version that exists on the class.
             getattr(cls, name).bind(name=name, trans_name=trans_name,
-                                    owner=instance))
+                                    owner=instance)
 
         # Instantiate the indexes class so that any methods defined on it
         # will work properly (including properties)
@@ -297,9 +297,9 @@ class Model(object):
         """
         if hasattr(val, 'bind'):
             pass
-        elif hasattr(self.c, attr):
+        elif attr not in ('c', 'r') and hasattr(self.c, attr):
             getattr(self.c, attr).value = val
-        elif hasattr(self.r, attr):
+        elif attr not in ('c', 'r') and hasattr(self.r, attr):
             raise Exception('Cannot override relationship with another value')
         else:
             object.__setattr__(self, attr, val)
@@ -385,28 +385,28 @@ class Model(object):
     def join(self, label=None, model=None, join_type=None, filters=None):
         pass
 
-    @result_loaded
+    @results_loaded
     def scalar(self):
         """
             Returns the first value of the first row based on the filters assigned.
         """
         pass
 
-    @result_loaded
+    @results_loaded
     def one(self):
         """
             Returns a single row based on the filters assigned
         """
         pass
 
-    @result_loaded
+    @results_loaded
     def get(self):
         """
             Returns all results based on the filters assigned
         """
         pass
 
-    @result_loaded
+    @results_loaded
     def all(self):
         """
             Returns all results for the table, regardless of the filters assigned
@@ -472,8 +472,14 @@ class Model(object):
         """
         pass
 
-    def update(self, cascade=False):
+    def update(self):
         pass
 
     def delete(self, cascade=False):
+        pass
+
+    def truncate(self):
+        pass
+
+    def create(self):
         pass
