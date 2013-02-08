@@ -46,7 +46,7 @@ m = SampleModel()
 m.field2 = Char(length=255)
 ```
 ## Relationships
-Builds a field called `relationship1_id` on the SampleModel table, and uses that field to map to `Sample2ndModel.id` (or whatever the primary key is).  This is the default behavior when no filters are defined on a relationship.
+
 ```python
 from pyorm import Model, Integer, OneToMany
 
@@ -57,8 +57,7 @@ class SampleModel(Model):
     
     relationship1 = OneToMany(Sample2ndModel)
 ```
-
-Uses the filters provided to gather the related `Sample2ndModel` results does not build an actual field on the model, so any mappings have to be done by hand. This should be used when dealing with a legacy database, or in the case that multiple fields are mapped across a pair of tables.
+Builds a field called `relationship1_id` on the SampleModel table, and uses that field to map to `Sample2ndModel.id` (or whatever the primary key is).  This is the default behavior when no filters are defined on a relationship.
 ```python
 from pyorm import Model, Integer, OneToMany
 from examples import Sample2ndModel
@@ -72,9 +71,7 @@ class SampleModel(Model):
     relationship2 = OneToMany(
         Sample2ndModel, filter=[C.field1 == C.relationship2.extra_id])
 ```
-Relationships can refer to models not in the current namespace as well by providing the name of the model as the first argument, and the import path via the import_from keyword arguement.  This is also useful when trying to avoid circular imports, and can be used with filters as well.
-
-This method of importing can also be used to limit the models that are imported when the `SampleModel` is loaded, as importing SampleModel would cause `Sample2ndModel` to be imported, as well as any other models which are connected to `Sample2ndModel`.
+Uses the filters provided to gather the related `Sample2ndModel` results does not build an actual field on the model, so any mappings have to be done by hand. This should be used when dealing with a legacy database, or in the case that multiple fields are mapped across a pair of tables.
 ```python
 from pyorm import Model, Integer
 
@@ -89,7 +86,9 @@ class SampleModel(Model):
         Sample2ndModel, filter=[C.field1 == C.relationship2.extra_id])
 
 ```
+Relationships can refer to models not in the current namespace as well by providing the name of the model as the first argument, and the import path via the import_from keyword arguement.  This is also useful when trying to avoid circular imports, and can be used with filters as well.  This type of relationship can be seen in `SampleModel.relationship1` above.
 
+This method of importing can also be used to limit the models that are imported when the `SampleModel` is loaded, as importing SampleModel would cause `Sample2ndModel` to be imported, as well as any other models which are connected to `Sample2ndModel`.
 ## Indexes
 ## Meta data
 # Retrieving / Storing / Deleting Data
