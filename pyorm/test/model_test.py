@@ -2,10 +2,13 @@ import inspect
 import unittest
 
 from pyorm.model import MetaModel, Model, RecordProxy, clones, results_loaded
+from pyorm.field import Integer
+from pyorm.relationship import OneToOne
 
 
 class MockModel(Model):
-    pass
+    test_ = Integer(length=3, default=0, null=False, unsigned=False)
+    testr_ = OneToOne()
 
 
 class PropertiesTestCase(unittest.TestCase):
@@ -51,19 +54,22 @@ class MetaModelTestCase(unittest.TestCase):
         self.assertFalse(inspect.isclass(model.Meta))
 
     def test_relationships_cls(self):
-        pass
+        self.assertTrue(hasattr(MockModel, 'testr_'))
+        self.assertTrue(hasattr(MockModel.testr_, 'bind'))
 
     def test_relationships_instance(self):
-        pass
+        model = MockModel()
+        self.assertFalse(model.__dict__.get('testr_', False))
+        self.assertFalse(inspect.isclass(model.r.testr_))
 
     def test_fields_cls(self):
-        pass
+        self.assertTrue(hasattr(MockModel, 'test_'))
+        self.assertTrue(hasattr(MockModel.test_, 'bind'))
     
     def test_fields_instance(self):
-        pass
-
-    def test_add_field(self):
-        pass
+        model = MockModel()
+        self.assertFalse(model.__dict__.get('test_', False))
+        self.assertFalse(inspect.isclass(model.c.test_))
 
 
 class ModelTestCase(unittest.TestCase):
@@ -74,6 +80,20 @@ class ModelTestCase(unittest.TestCase):
     def test_deepcopy(self):
         # Returns an exact clone of the model and all relationships
         pass
+
+    def test_add_field(self):
+        model = MockModel()
+        model.fish_taco = Integer(length=4, default=0, null=True, unsigned=True)
+        self.assertFalse(model.__dict__.get('added_field', False))
+        self.assertTrue(hasattr(model.c, 'added_field'))
+        self.assertFalse(inspect.isclass(model.c.added_field))
+
+    def test_add_relationship(self):
+        model = MockModel()
+        model.added_relationship = OneToOne()
+        self.assertFalse(model.__dict__.get('added_relationship', False))
+        self.assertTrue(hasattr(model.r, 'added_relationship'))
+        self.assertFalse(inspect.isclass(model.r.added_relationship))
 
     def test_owner(self):
         # Get/set the owner on the model and expressions

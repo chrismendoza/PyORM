@@ -88,11 +88,12 @@ class MetaModel(type):
             need to be attached to the model every time an instance is created.
         """
         new_class = type.__new__(cls, name, bases, attrs)
-        new_class._unbound = []
+        new_class._unbound = {}
 
         for name, item in new_class.__dict__.items():
             if hasattr(item, 'bind'):
-                new_class._unbound.append(name)
+                new_class._unbound[name] = item
+                delattr(new_class, name)
 
         indexes = getattr(new_class, 'Indexes', None)
 
@@ -123,6 +124,12 @@ class MetaModel(type):
         new_class.Meta.owner = new_class
         
         return new_class
+
+    def __getattr__(cls, name):
+        try:
+            return weakref.proxy(cls._unbound[name])
+        except KeyError:
+            raise AttributeError(name)
 
     def __call__(cls, *args, **kwargs):
         """
@@ -260,12 +267,6 @@ class Model(object):
 
             Also triggers a .get() to be run when a field or relationship
             is accessed but no result has been returned yet.
-
-            NOTE: This functionality is only used in cases where a descriptor
-                  has not been added to the base class when initially parsing
-                  the fields/relationships (Fields or relationships added
-                  after the class was created, always occurs with compound
-                  fields, as we never want to add those to the base class object).
         """
         if hasattr(self.c, attr):
             if not self.result_loaded:
@@ -287,14 +288,14 @@ class Model(object):
             This also prevents previously defined relationships from being
             overwritten.  If you need to modify a relationship on the fly, they
             can be accessed via Model.r.rel_name.
-
-            NOTE: This functionality is only used in cases where a descriptor
-                  has not been added to the base class when initially parsing
-                  the fields/relationships (Fields or relationships added
-                  after the class was created).
         """
         if hasattr(val, 'bind'):
-            pass
+            if attr[-1] == '_':
+                trans_name = attr[:-1]
+            else:
+                trans_name = attr
+
+            val.bind(name=attr, trans_name=trans_name, owner=self)
         elif attr not in ('c', 'r') and hasattr(self.c, attr):
             getattr(self.c, attr).value = val
         elif attr not in ('c', 'r') and hasattr(self.r, attr):

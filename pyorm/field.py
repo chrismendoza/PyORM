@@ -14,9 +14,8 @@ class UnboundField(object):
     """
     idx = 0
 
-    def __init__(self, cls, *args, **kwargs):
+    def __init__(self, cls, **kwargs):
         self.field_type = cls
-        self.args = args
         self.kwargs = kwargs
         UnboundField.idx += 1
         self.idx = UnboundField.idx
@@ -25,7 +24,7 @@ class UnboundField(object):
         kwargs = dict(self.kwargs)
         kwargs.update({'_name': name, '_trans_name': trans_name,
                        '_owner': owner})
-        instance = self.field_type(*self.args, **kwargs)
+        instance = self.field_type(**kwargs)
         instance.idx = self.idx
         instance.unbound_field = self
         setattr(owner.c, name, instance)
@@ -36,13 +35,13 @@ class MetaField(type):
         Returns an unbound field if we don't know all the information about
         the field yet.
     """
-    def __call__(cls, *args, **kwargs):
+    def __call__(cls, **kwargs):
         if len({'_trans_name', '_owner', '_name'} & set(kwargs.keys())) == 3:
             instance = cls.__new__(cls)
-            instance.__init__(*args, **kwargs)
+            instance.__init__(**kwargs)
             return instance
         else:
-            return UnboundField(cls, *args, **kwargs)
+            return UnboundField(cls, **kwargs)
 
 
 class Field(object):
@@ -66,7 +65,7 @@ class Field(object):
             self._changed = True
             self._value = val
 
-    def __init__(self, default=None, null=False):
+    def __init__(self, default=None, null=False, **kwargs):
         self.default = default
         self.null = null
         self._idx = None
@@ -82,7 +81,7 @@ class Field(object):
 
 class Integer(Field):
     def __init__(self, length=None, unsigned=False, autoincrement=False, **kwargs):
-        super(Field, self).__init__(self, **kwargs)
+        super(Integer, self).__init__(**kwargs)
         self.length = length
         self.unsigned = unsigned
         self.autoincrement = autoincrement
