@@ -3,7 +3,42 @@ PyORM
 
 # Configuration
 # Building a model with PyORM
+Models in PyORM act as a direct representation of a table object in your chosen database, but also perform some other important functions, such as:
+* Keeping track of which fields and compound fields have been requested.
+* Tracking which filters you want to apply to a given select/update/delete/replace operation.
+* Tracking how you want to group the data that comes back from `SELECT` queries.
+* Mapping returned data to a mapping object you provide instead of returning a model to iterate over.
+
+The simplest model definition you could possibly create with PyORM is:
+```python
+from pyorm import Model
+
+
+class SimpleModel(Model):
+    pass
+```
+Though this model doesn't do much of anything, it will set up a few things behind the scenes, including an integer column called `id`, which is autoincrementing, unsigned, and assigned as the primary key for this table.  It also automatically creates SimpleModel.Meta and SimpleModel.Indexes attributes, which are both used internally.  SimpleModel.Meta is also used for various settings which you can manipulate at runtime (more on that in the Meta data section).
+
+The reason PyORM creates the `id` column is that it helps ensure that some sort of index is attached to each table, even if you choose not to define one.  This should help related queries run more quickly when you create simple relationships.  For instructions on how to turn this behaviour off, see the Meta data section (this would be especially important in cases where you have a pre-existing database schema).
 ## Fields
+For pretty much every model you create, the above example will not be enough, you will also need to have columns to store your data on.  PyORM has quite a few field types out of the box, with the simplest being `Integer`, `Char`, `Decimal`, `Date`, and `Time`.
+
+```python
+from pyorm import Model, Integer
+
+
+class SimpleModel(Model):
+    field1 = Integer(length=8, unsigned=True, default=0, null=False)
+```
+
+Fields are defined on the main Model class, but because there are several methods defined on the Model class, you may run into situations where your table name conflicts with one of those methods.  If you do run into this situation, PyORM allows you to suffix your field name with `_`, and the trailing `_` will automatically be stripped when pushing data to the database, as well as when the model is created (if you are using PyORM to create your database schema).
+```python
+from pyorm import Model, Integer
+
+
+class SimpleModel(Model):
+    conflicting_name_ = Integer(length=8, unsigned=True, default=0, null=False)
+```
 ## Relationships
 ## Indexes
 ## Meta data
@@ -92,7 +127,8 @@ Alternatively you can choose to just iterate over the model you are working with
 ## Updating Data
 ## Deleting Data
 ## Replacing Data
-# Advanced Concepts
+# Advanced Concepts & Types
+## Fields
 ## Helpers
 ## Subqueries
 ## Mapping objects
