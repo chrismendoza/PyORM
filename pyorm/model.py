@@ -44,7 +44,7 @@ class RecordProxy(object):
 
     def __getattr__(self, attr):
         if not self._cloned and self.idx != self.model.current_idx:
-            self.model = self.model._clone(idx=self.idx)
+            self.model = self.model.clone(idx=self.idx)
             self._cloned = True
         return getattr(self.model, attr)
 
@@ -77,10 +77,6 @@ def results_loaded(func):
         result = func(instance, *args, **kwargs)
         instance.result_loaded = True
         return result
-
-
-class Container(object):
-    pass
 
 
 class MetaModel(type):
@@ -142,8 +138,10 @@ class MetaModel(type):
             derived from Meta.
         """
         instance = cls.__new__(cls)
-        instance.c = Container()
-        instance.r = Container()
+        # Creates a couple simple objects that allow attribute assignment (one
+        # holds fields/columns and the other holds relationships).
+        instance.c = lambda: None
+        instance.r = lambda: None
 
         # Assigns a parent model to a given object.  This should only be used
         # when creating a new model for a relationship, and as such is prefixed
@@ -279,7 +277,6 @@ class Model(object):
             return getattr(self.r, attr).model
         else:
             raise AttributeError(attr)
-
 
     def __setattr__(self, attr, val):
         """
