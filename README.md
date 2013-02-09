@@ -46,21 +46,22 @@ m = SampleModel()
 m.field2 = Char(length=255)
 ```
 ## Relationships
-
+Relationships are the way in which PyORM connects one model to another, and relationships can be added in any of the following ways.
 ```python
 from pyorm import Model, Integer, OneToMany
+from examples import Sample3rdModel
 
 
 class SampleModel(Model):
     field1 = Integer(length=8, unsigned=True, default=0, null=False)
     conflicting_name_ = Integer(length=8, unsigned=True, default=0, null=False)
     
-    relationship1 = OneToMany(Sample2ndModel)
+    relationship1 = OneToMany(Sample3rdModel)
 ```
 Builds a field called `relationship1_id` on the SampleModel table, and uses that field to map to `Sample2ndModel.id` (or whatever the primary key is).  This is the default behavior when no filters are defined on a relationship.
 ```python
 from pyorm import Model, Integer, OneToMany
-from examples import Sample2ndModel
+from examples import Sample3rdModel
 
 
 class SampleModel(Model):
@@ -69,11 +70,12 @@ class SampleModel(Model):
     
     relationship1 = OneToMany(Sample2ndModel)
     relationship2 = OneToMany(
-        Sample2ndModel, filter=[C.field1 == C.relationship2.extra_id])
+        Sample3rdModel, filter=[C.field1 == C.relationship2.extra_id])
 ```
 Uses the filters provided to gather the related `Sample2ndModel` results does not build an actual field on the model, so any mappings have to be done by hand. This should be used when dealing with a legacy database, or in the case that multiple fields are mapped across a pair of tables.
 ```python
 from pyorm import Model, Integer
+from examples import Sample3rdModel
 
 
 class SampleModel(Model):
@@ -83,12 +85,58 @@ class SampleModel(Model):
     relationship1 = OneToMany(
         'Sample2ndModel', import_from='path.to.model')
     relationship2 = OneToMany(
-        Sample2ndModel, filter=[C.field1 == C.relationship2.extra_id])
+        Sample3rdModel, filter=[C.field1 == C.relationship2.extra_id])
 
 ```
 Relationships can refer to models not in the current namespace as well by providing the name of the model as the first argument, and the import path via the import_from keyword arguement.  This is also useful when trying to avoid circular imports, and can be used with filters as well.  This type of relationship can be seen in `SampleModel.relationship1` above.
 
 This method of importing can also be used to limit the models that are imported when the `SampleModel` is loaded, as importing SampleModel would cause `Sample2ndModel` to be imported, as well as any other models which are connected to `Sample2ndModel`.
+
+```python
+from pyorm import Model, Integer
+from examples import Sample3rdModel, Sample4thModel, Sample6thModel
+
+
+class SampleModel(Model):
+    field1 = Integer(length=8, unsigned=True, default=0, null=False)
+    conflicting_name_ = Integer(length=8, unsigned=True, default=0, null=False) 
+    
+    relationship1 = OneToMany(
+        'Sample2ndModel', import_from='path.to.model')
+    relationship2 = OneToMany(
+        Sample3rdModel, filter=[C.field1 == C.relationship2.extra_id])
+
+m = SampleModel()
+# simple relationship added
+m.relationship3 = OneToMany(Sample4thModel)
+
+# simple non-circular relationship
+m.relationship4 = OneToMany('Sample5thModel', import_from='path.to.model')
+
+# relationship added with filters
+m.relationship5 = OneToMany(
+    Sample6thModel, filter=[C.field1 == C.relationship4.extra_id])
+```
+If you have a need to add a relationship for a specific query, the easiest and cleanest way to do it is to add the relationship directly to the Model instance you intend to pull data from.
+
+```python
+from pyorm import Model, Integer
+from examples import Sample3rdModel, Sample4thModel, Sample6thModel
+
+
+class SampleModel(Model):
+    field1 = Integer(length=8, unsigned=True, default=0, null=False)
+    conflicting_name_ = Integer(length=8, unsigned=True, default=0, null=False) 
+    
+    relationship1 = OneToMany(
+        'Sample2ndModel', import_from='path.to.model')
+    relationship2 = OneToMany(
+        Sample3rdModel, filter=[C.field1 == C.relationship2.extra_id])
+
+m = SampleModel()
+m.r.relationship1.join = 'left'
+```
+By default, relationships in PyORM are assumed to be an inner join, where there must be a matching row in both the primary model and the model it is related to in order to pull back a record, however there are some occasions where you may want to pull back all records from the main model object, regardless of whether or not there is a matching related object.  In these cases, the relationships you defined can be tweaked by changing the `Relationship.join` attribute as seen above.  NOTE: All relationships can be accessed when dealing with a model via `Model.r.[relationship_name]`.
 ## Indexes
 ## Meta data
 # Retrieving / Storing / Deleting Data
