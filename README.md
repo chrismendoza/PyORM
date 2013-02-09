@@ -136,7 +136,7 @@ class SampleModel(Model):
 m = SampleModel()
 m.r.relationship1.join = 'left'
 ```
-By default, relationships in PyORM are assumed to be an inner join, where there must be a matching row in both the primary model and the model it is related to in order to pull back a record, however there are some occasions where you may want to pull back all records from the main model object, regardless of whether or not there is a matching related object.  In these cases, the relationships you defined can be tweaked by changing the `Relationship.join` attribute as seen above.  NOTE: All relationships can be accessed when dealing with a model via `Model.r.[relationship_name]`.
+By default, relationships in PyORM are assumed to be an inner join, where there must be a matching row in both the primary model and the model it is related to in order to pull back a record, however there are some occasions where you may want to pull back all records from the main model object, regardless of whether or not there is a matching related object.  In these cases, the relationships you defined can be tweaked by changing the `Relationship.join` attribute as seen above.  NOTE: All relationships can be accessed when dealing with a model via `Model().r.[relationship_name]`.
 ## Indexes
 ## Meta data
 # Retrieving / Storing / Deleting Data
