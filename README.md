@@ -138,6 +138,21 @@ m.r.relationship1.join = 'left'
 ```
 By default, relationships in PyORM are assumed to be an inner join, where there must be a matching row in both the primary model and the model it is related to in order to pull back a record, however there are some occasions where you may want to pull back all records from the main model object, regardless of whether or not there is a matching related object.  In these cases, the relationships you defined can be tweaked by changing the `Relationship.join` attribute as seen above.  NOTE: All relationships can be accessed when dealing with a model via `Model().r.[relationship_name]`.
 ## Indexes
+PyORM creates a primary key index on each model automatically, assuming that no primary key was defined by the user and `Meta.auto_primary_key` is not set to `False` on the model (more on that below).  In addition to this automatic primary key, you can define three other types of indexes on the model.
+```python
+from pyorm import Model, Integer, OneToMany, PrimaryKey
+from examples import Sample3rdModel
+
+
+class SampleModel(Model):
+    field1 = Integer(length=8, unsigned=True, default=0, null=False)
+    conflicting_name_ = Integer(length=8, unsigned=True, default=0, null=False)
+    relationship1 = OneToMany(Sample3rdModel)
+    
+    Indexes:
+        pk = PrimaryKey('field1', 'conflicting_name_')
+```
+Above, is how you can override the automatic primary key of a model, while defining the key as a set of multiple fields instead.  One thing to notice is that unlike fields and relationships which are defined directly on the model, Indexes are defined on a sub class of the model, called `Indexes`, if necessary, you can add methods to this Indexes class (though I'm not sure the circumstances in which you would need to).
 ## Meta data
 # Retrieving / Storing / Deleting Data
 ## Choosing Fields
