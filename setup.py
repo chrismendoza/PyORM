@@ -10,7 +10,7 @@ setup(
     version='0.1.0',
     author='Chris Mendoza',
     author_email='chris.mendoza@pyorm.com',
-    packages=['pyorm'],
+    packages=['pyorm', 'pyorm.model', 'pyorm.field', 'pyorm.connection'],
     url='http://github.com/chrismendoza/PyORM/tree/legacy',
     license='LICENSE.txt',
     description='an ORM',
