@@ -7,7 +7,7 @@ f.close()
 
 setup(
     name='PyORM',
-    version='0.0.1',
+    version='0.2.0',
     author='Chris Mendoza',
     author_email='chris.mendoza@pyorm.com',
     packages=['pyorm'],
